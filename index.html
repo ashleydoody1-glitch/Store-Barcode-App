@@ -350,7 +350,7 @@
       </div>
       
       <label for="desc">Item Description</label>
-      <input type="text" id="desc" placeholder="E" style="margin-bottom: 16px;">
+      <input type="text" id="desc" placeholder="" style="margin-bottom: 16px;">
       
       <div class="button-group">
         <button class="btn btn-cancel" id="cancel-btn" onclick="cancelEdit()">Cancel</button>
@@ -360,7 +360,7 @@
 
     <!-- Active List Section -->
     <div class="list-header">
-      <span>Labels Ready to Print</span>
+      <span>Labels Entered</span>
       <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="count-badge">0</span>
     </div>
     
@@ -377,7 +377,7 @@
     <!-- Main Actions -->
     <div id="action-buttons" style="display: none;">
       <button class="btn btn-group-save" onclick="saveSelectedToGroup()">Save Selected to Group</button>
-      <button class="btn btn-print" onclick="triggerPrint()">Print A4 Landscape Sheet</button>
+      <button class="btn btn-print" onclick="triggerPrint()">Print Sheet</button>
       <button class="btn btn-clear" onclick="clearAllLabels()">Clear All Labels</button>
     </div>
 
