@@ -1,0 +1,761 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode Sheet Builder</title>
+  
+  <!-- JsBarcode for generating barcodes to print -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <!-- Html5-Qrcode for scanning barcodes via camera -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  
+  <style>
+    /* --- MOBILE APP UI STYLES (Screen Only) --- */
+    :root {
+      --primary: #0056b3;
+      --primary-dark: #004494;
+      --secondary: #6c757d;
+      --danger: #dc3545;
+      --success: #28a745;
+      --warning: #ffc107;
+      --bg: #f4f7f6;
+      --card-bg: #ffffff;
+      --text: #333333;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    @media screen {
+      .app-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      
+      h1 { 
+        font-size: 24px; 
+        text-align: center; 
+        margin-bottom: 24px; 
+        color: var(--primary);
+      }
+      
+      .input-card {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+      }
+      
+      .input-card.editing {
+        border: 2px solid var(--warning);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+      }
+      
+      label { 
+        font-weight: 600; 
+        display: block; 
+        margin-bottom: 8px; 
+        font-size: 14px; 
+        color: #555;
+      }
+      
+      .input-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      input[type="text"] {
+        flex-grow: 1;
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 16px;
+        text-transform: uppercase;
+        transition: border-color 0.2s;
+      }
+      
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      
+      .btn-scan-trigger {
+        background-color: var(--text);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0 16px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+      }
+
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn:active { opacity: 0.8; }
+      
+      .button-group {
+        display: flex;
+        gap: 10px;
+      }
+      
+      .btn-cancel { background-color: var(--secondary); display: none; }
+      .btn-update { background-color: var(--warning); color: #000; }
+      .btn-print { background-color: var(--success); margin-top: 24px; }
+      .btn-group-save { background-color: var(--primary-dark); margin-top: 12px; }
+
+      .btn-clear {
+        background-color: transparent;
+        color: var(--danger);
+        border: 2px solid var(--danger);
+        margin-top: 12px;
+        margin-bottom: 40px;
+      }
+      
+      .list-header { 
+        font-weight: bold; 
+        margin-top: 30px; 
+        margin-bottom: 12px; 
+        font-size: 18px; 
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .scanned-list {
+        background: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      
+      .scanned-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .scanned-item:last-child { border-bottom: none; }
+      
+      .item-checkbox {
+        transform: scale(1.4);
+        margin-right: 5px;
+        cursor: pointer;
+      }
+
+      .item-details {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        overflow: hidden;
+      }
+      
+      .item-part { font-weight: bold; font-size: 16px; }
+      .item-desc { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      
+      .item-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .btn-action {
+        background: transparent;
+        border: 1px solid #ccc;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .btn-action.edit { color: var(--primary); border-color: var(--primary); }
+      .btn-action.remove { color: var(--danger); border-color: var(--danger); }
+
+      .empty-state {
+        padding: 20px;
+        text-align: center;
+        color: #888;
+        font-style: italic;
+      }
+      
+      .select-all-row {
+        padding: 10px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      /* Groups Section */
+      .groups-section {
+        margin-top: 40px;
+        border-top: 2px dashed #ccc;
+        padding-top: 20px;
+      }
+      .group-card {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      .group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .group-title { font-weight: bold; font-size: 16px; color: var(--primary-dark); }
+      .group-count { font-size: 12px; color: #666; background: #eee; padding: 2px 6px; border-radius: 10px; }
+      .group-actions { display: flex; gap: 8px; }
+      .btn-load { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+      .btn-delete-group { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+
+      /* Fullscreen Scanner Modal */
+      #scanner-modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.95);
+        z-index: 9999;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      #reader {
+        width: 100%;
+        max-width: 500px;
+        background: black;
+      }
+      .btn-close-scanner {
+        margin-top: 20px;
+        background: var(--danger);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      #print-layout { display: none; }
+    }
+
+    /* --- PRINT STYLES (A4 Landscape) --- */
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      .app-container, #scanner-modal { display: none !important; }
+      #print-layout {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10mm;
+        width: 100%;
+      }
+      body { background: white; color: black; }
+      .print-card {
+        border: 1px solid #000;
+        border-radius: 4px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        height: 160px;
+        box-sizing: border-box;
+        page-break-inside: avoid;
+      }
+      .print-part {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 6px;
+        font-family: monospace;
+      }
+      .print-desc {
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: auto;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .barcode-wrapper {
+        margin-top: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+      .barcode-wrapper svg {
+        max-height: 70px;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAMERA SCANNER MODAL -->
+  <div id="scanner-modal">
+    <div id="reader"></div>
+    <button class="btn-close-scanner" onclick="stopScanner()">Cancel Scan</button>
+  </div>
+
+  <!-- MOBILE UI -->
+  <div class="app-container">
+    <h1>Barcode Label Builder</h1>
+    
+    <div class="input-card" id="input-card">
+      <label for="partNo">Part Number</label>
+      <div class="input-row">
+        <input type="text" id="partNo" placeholder="e.g. PI-0006200">
+        <button class="btn-scan-trigger" onclick="startScanner()" type="button">📷 Scan</button>
+      </div>
+      
+      <label for="desc">Item Description (Optional)</label>
+      <input type="text" id="desc" placeholder="e.g. MONITOR - PRESSURE" style="margin-bottom: 16px;">
+      
+      <div class="button-group">
+        <button class="btn btn-cancel" id="cancel-btn" onclick="cancelEdit()">Cancel</button>
+        <button class="btn" id="add-btn" onclick="addOrUpdateLabel()">Add to Sheet</button>
+      </div>
+    </div>
+
+    <!-- Active List Section -->
+    <div class="list-header">
+      <span>Labels Ready to Print</span>
+      <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="count-badge">0</span>
+    </div>
+    
+    <div class="scanned-list">
+      <div id="select-all-container" style="display: none;" class="select-all-row">
+        <input type="checkbox" id="selectAll" class="item-checkbox" onclick="toggleSelectAll(this)">
+        <label for="selectAll" style="margin:0; cursor:pointer;">Select All</label>
+      </div>
+      <div id="list">
+        <div class="empty-state" id="empty-state">No labels added yet.</div>
+      </div>
+    </div>
+
+    <!-- Main Actions -->
+    <div id="action-buttons" style="display: none;">
+      <button class="btn btn-group-save" onclick="saveSelectedToGroup()">Save Selected to Group</button>
+      <button class="btn btn-print" onclick="triggerPrint()">Print A4 Landscape Sheet</button>
+      <button class="btn btn-clear" onclick="clearAllLabels()">Clear All Labels</button>
+    </div>
+
+    <!-- Saved Groups Section -->
+    <div class="groups-section" id="groups-section" style="display: none;">
+      <div class="list-header" style="margin-top:0;">My Saved Groups</div>
+      <div id="groups-list">
+        <!-- Groups render here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT UI -->
+  <div id="print-layout"></div>
+
+  <script>
+    // State variables
+    let labels = [];
+    let savedGroups = [];
+    let editingId = null;
+    let html5QrCode = null; // Scanner instance
+
+    // Initialization
+    window.onload = () => {
+      // Load and scrub active list
+      const rawLabels = JSON.parse(localStorage.getItem('savedBarcodeLabels')) || [];
+      labels = rawLabels.map(label => ({
+        id: label.id,
+        desc: label.desc,
+        partNo: label.partNo.toUpperCase().replace(/[^A-Z0-9\-]/g, ''),
+        selected: false 
+      }));
+      
+      // Load groups
+      savedGroups = JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [];
+      
+      saveData();
+      saveGroupsData();
+
+      document.getElementById('partNo').value = "";
+      document.getElementById('desc').value = "";
+      
+      renderUI();
+      
+      // Enter key listeners
+      document.getElementById('partNo').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('desc').focus(); }
+      });
+      document.getElementById('desc').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); addOrUpdateLabel(); }
+      });
+    };
+
+    // --- CAMERA SCANNER LOGIC ---
+    function startScanner() {
+      const modal = document.getElementById('scanner-modal');
+      modal.style.display = 'flex';
+
+      // Initialize scanner
+      html5QrCode = new Html5Qrcode("reader");
+      
+      // Configuration for reading 1D barcodes primarily
+      const config = { 
+        fps: 10, 
+        qrbox: { width: 300, height: 150 }, // wide rectangle for barcode
+        aspectRatio: 1.0,
+        formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ]
+      };
+
+      html5QrCode.start({ facingMode: "environment" }, config, 
+        (decodedText, decodedResult) => {
+          // Success Callback
+          stopScanner(); // Automatically close scanner on successful read
+          
+          // Scrub scanned text just to be safe
+          const cleanText = decodedText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+          document.getElementById('partNo').value = cleanText;
+          
+          // Vibrate if mobile device supports it
+          if (navigator.vibrate) navigator.vibrate(100);
+
+          // Focus next input
+          document.getElementById('desc').focus();
+        },
+        (errorMessage) => {
+          // Failure callback - constantly fires while looking for a barcode, so we ignore it
+        }
+      ).catch((err) => {
+        alert("Unable to access camera. Please ensure you have granted camera permissions.");
+        stopScanner();
+      });
+    }
+
+    function stopScanner() {
+      const modal = document.getElementById('scanner-modal');
+      modal.style.display = 'none';
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          html5QrCode = null;
+        }).catch(err => {
+          console.error("Failed to stop scanner", err);
+        });
+      }
+    }
+
+    // --- ADD or UPDATE Label ---
+    function addOrUpdateLabel() {
+      const partNoInput = document.getElementById('partNo');
+      const descInput = document.getElementById('desc');
+      
+      // Filter out spaces/special chars completely
+      const partNo = partNoInput.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+      const desc = descInput.value.trim().toUpperCase();
+
+      if(!partNo) {
+        alert("Please enter a valid part number.");
+        partNoInput.focus();
+        return;
+      }
+
+      if (editingId) {
+        const index = labels.findIndex(l => l.id === editingId);
+        if(index > -1) {
+          labels[index].partNo = partNo;
+          labels[index].desc = desc;
+        }
+        cancelEdit(); 
+      } else {
+        const newLabel = {
+          id: Date.now().toString(),
+          partNo: partNo,
+          desc: desc,
+          selected: false
+        };
+        labels.push(newLabel);
+      }
+
+      saveData();
+      
+      partNoInput.value = "";
+      descInput.value = "";
+      partNoInput.focus();
+
+      renderUI();
+    }
+
+    // --- EDITING LOGIC ---
+    function editLabel(id) {
+      const label = labels.find(l => l.id === id);
+      if(!label) return;
+      
+      editingId = id;
+      document.getElementById('partNo').value = label.partNo;
+      document.getElementById('desc').value = label.desc;
+      
+      const inputCard = document.getElementById('input-card');
+      inputCard.classList.add('editing');
+      
+      const addBtn = document.getElementById('add-btn');
+      addBtn.innerText = "Update Label";
+      addBtn.classList.add('btn-update');
+      
+      document.getElementById('cancel-btn').style.display = 'block';
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      document.getElementById('partNo').value = "";
+      document.getElementById('desc').value = "";
+      
+      const inputCard = document.getElementById('input-card');
+      inputCard.classList.remove('editing');
+      
+      const addBtn = document.getElementById('add-btn');
+      addBtn.innerText = "Add to Sheet";
+      addBtn.classList.remove('btn-update');
+      
+      document.getElementById('cancel-btn').style.display = 'none';
+    }
+
+    // --- LIST MANAGEMENT ---
+    function removeLabel(id) {
+      labels = labels.filter(label => label.id !== id);
+      saveData();
+      renderUI();
+    }
+
+    function clearAllLabels() {
+      if(confirm("Are you sure you want to clear the active list? (Saved groups will not be deleted)")) {
+        labels = [];
+        saveData();
+        renderUI();
+      }
+    }
+
+    function toggleSelect(id, isChecked) {
+      const label = labels.find(l => l.id === id);
+      if(label) label.selected = isChecked;
+      checkSelectAllState();
+    }
+
+    function toggleSelectAll(checkbox) {
+      const isChecked = checkbox.checked;
+      labels.forEach(l => l.selected = isChecked);
+      renderUI();
+    }
+
+    function checkSelectAllState() {
+      const allChecked = labels.length > 0 && labels.every(l => l.selected);
+      document.getElementById('selectAll').checked = allChecked;
+    }
+
+    // --- GROUP MANAGEMENT ---
+    function saveSelectedToGroup() {
+      const selectedLabels = labels.filter(l => l.selected);
+      
+      if(selectedLabels.length === 0) {
+        alert("Please check the boxes next to the parts you want to save in a group.");
+        return;
+      }
+      
+      const groupName = prompt("Enter a name for this group (e.g. 'Daily Service Kit'):");
+      if(!groupName || groupName.trim() === "") return;
+
+      const groupItems = selectedLabels.map(l => ({
+        partNo: l.partNo,
+        desc: l.desc
+      }));
+
+      const newGroup = {
+        id: "group_" + Date.now().toString(),
+        name: groupName.trim(),
+        items: groupItems
+      };
+
+      savedGroups.push(newGroup);
+      saveGroupsData();
+      
+      labels.forEach(l => l.selected = false);
+      renderUI();
+      
+      alert(`Group "${newGroup.name}" saved successfully!`);
+    }
+
+    function loadGroup(groupId) {
+      const group = savedGroups.find(g => g.id === groupId);
+      if(!group) return;
+
+      group.items.forEach(item => {
+        labels.push({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+          partNo: item.partNo,
+          desc: item.desc,
+          selected: false
+        });
+      });
+
+      saveData();
+      renderUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteGroup(groupId) {
+      if(confirm("Delete this saved group permanently?")) {
+        savedGroups = savedGroups.filter(g => g.id !== groupId);
+        saveGroupsData();
+        renderUI();
+      }
+    }
+
+    // --- STORAGE ---
+    function saveData() { localStorage.setItem('savedBarcodeLabels', JSON.stringify(labels)); }
+    function saveGroupsData() { localStorage.setItem('savedBarcodeGroups', JSON.stringify(savedGroups)); }
+
+    function triggerPrint() {
+      try { window.print(); } catch (err) { console.error("Print blocked:", err); }
+    }
+
+    // --- RENDER ---
+    function renderUI() {
+      const listContainer = document.getElementById('list');
+      const printContainer = document.getElementById('print-layout');
+      const selectAllContainer = document.getElementById('select-all-container');
+      const actionButtons = document.getElementById('action-buttons');
+      const countBadge = document.getElementById('count-badge');
+      const groupsSection = document.getElementById('groups-section');
+      const groupsListContainer = document.getElementById('groups-list');
+
+      countBadge.innerText = labels.length;
+      
+      if (labels.length > 0) {
+        selectAllContainer.style.display = 'flex';
+        actionButtons.style.display = 'block';
+      } else {
+        selectAllContainer.style.display = 'none';
+        actionButtons.style.display = 'none';
+      }
+
+      listContainer.innerHTML = '';
+      printContainer.innerHTML = '';
+
+      if(labels.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state" id="empty-state">No labels added yet.</div>';
+      } else {
+        labels.forEach((label) => {
+          const listItem = document.createElement('div');
+          listItem.className = 'scanned-item';
+          listItem.innerHTML = `
+            <input type="checkbox" class="item-checkbox" ${label.selected ? 'checked' : ''} onchange="toggleSelect('${label.id}', this.checked)">
+            <div class="item-details">
+              <span class="item-part">${label.partNo}</span>
+              <span class="item-desc">${label.desc || 'No description'}</span>
+            </div>
+            <div class="item-actions">
+              <button class="btn-action edit" onclick="editLabel('${label.id}')">Edit</button>
+              <button class="btn-action remove" onclick="removeLabel('${label.id}')">Remove</button>
+            </div>
+          `;
+          listContainer.appendChild(listItem);
+
+          const printCard = document.createElement('div');
+          printCard.className = 'print-card';
+          printCard.innerHTML = `
+            <div class="print-part">${label.partNo}</div>
+            <div class="print-desc">${label.desc}</div>
+            <div class="barcode-wrapper">
+              <svg id="barcode-${label.id}"></svg>
+            </div>
+          `;
+          printContainer.appendChild(printCard);
+
+          try {
+            JsBarcode(`#barcode-${label.id}`, label.partNo, {
+              format: "CODE128",
+              lineColor: "#000",
+              width: 2.5,
+              height: 60,
+              displayValue: false, 
+              margin: 0
+            });
+          } catch (e) {
+            console.error("Barcode generation failed for:", label.partNo);
+          }
+        });
+      }
+      
+      checkSelectAllState();
+
+      if(savedGroups.length > 0) {
+        groupsSection.style.display = 'block';
+        groupsListContainer.innerHTML = '';
+        savedGroups.forEach(group => {
+          const groupCard = document.createElement('div');
+          groupCard.className = 'group-card';
+          groupCard.innerHTML = `
+            <div class="group-header">
+              <div>
+                <span class="group-title">${group.name}</span>
+                <span class="group-count">${group.items.length} parts</span>
+              </div>
+            </div>
+            <div class="group-actions">
+              <button class="btn-load" onclick="loadGroup('${group.id}')">Load to List</button>
+              <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
+            </div>
+          `;
+          groupsListContainer.appendChild(groupCard);
+        });
+      } else {
+        groupsSection.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+```
