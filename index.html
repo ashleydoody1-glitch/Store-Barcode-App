@@ -240,6 +240,17 @@
         <!-- Groups render here -->
       </div>
     </div>
+
+    <!-- Scan History Section -->
+    <div class="groups-section" id="history-section" style="display: none;">
+      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+        <span>Scan History (Last 50)</span>
+        <button class="btn-action remove" onclick="clearHistory()" style="font-weight:normal; border-color:transparent;">Clear All</button>
+      </div>
+      <div class="scanned-list" id="history-list">
+        <!-- History renders here -->
+      </div>
+    </div>
   </div>
 
   <!-- PRINT UI -->
@@ -250,6 +261,7 @@
     let labels = [];
     let savedGroups = [];
     let savedJobs = [];
+    let scanHistory = [];
     let editingId = null; // for individual part items
     let contextEditing = null; // { type: 'job' | 'group', id: string, name: string }
     let html5QrCode = null;
@@ -266,6 +278,7 @@
       
       savedGroups = JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [];
       savedJobs = JSON.parse(localStorage.getItem('savedJobCards')) || [];
+      scanHistory = JSON.parse(localStorage.getItem('scanHistoryList')) || [];
       
       // Load any existing context
       contextEditing = JSON.parse(localStorage.getItem('editingContext')) || null;
@@ -340,6 +353,7 @@
         cancelEdit(); 
       } else {
         labels.push({ id: Date.now().toString(), partNo: partNo, desc: desc, selected: false });
+        addToHistory(partNo, desc);
       }
 
       saveData();
@@ -392,6 +406,42 @@
 
     function checkSelectAllState() {
       document.getElementById('selectAll').checked = labels.length > 0 && labels.every(l => l.selected);
+    }
+
+    // --- SCAN HISTORY LOGIC ---
+    function addToHistory(partNo, desc) {
+      // Skip consecutive exact duplicates to keep the log clean
+      if (scanHistory.length > 0 && scanHistory[0].partNo === partNo) {
+        return; 
+      }
+      
+      scanHistory.unshift({
+        id: 'hist_' + Date.now().toString(),
+        partNo: partNo,
+        desc: desc,
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString()
+      });
+      
+      // Cap at 50 items
+      if (scanHistory.length > 50) {
+        scanHistory = scanHistory.slice(0, 50);
+      }
+      saveHistoryData();
+    }
+
+    function addFromHistory(partNo, desc) {
+      document.getElementById('partNo').value = partNo;
+      document.getElementById('desc').value = desc;
+      addOrUpdateLabel();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearHistory() {
+      if(confirm("Are you sure you want to clear your entire scan history?")) {
+        scanHistory = [];
+        saveHistoryData();
+        renderUI();
+      }
     }
 
     // --- WORKBENCH CONTEXT EDITING (Jobs/Groups) ---
@@ -552,6 +602,7 @@
     function saveData() { localStorage.setItem('savedBarcodeLabels', JSON.stringify(labels)); }
     function saveGroupsData() { localStorage.setItem('savedBarcodeGroups', JSON.stringify(savedGroups)); }
     function saveJobsData() { localStorage.setItem('savedJobCards', JSON.stringify(savedJobs)); }
+    function saveHistoryData() { localStorage.setItem('scanHistoryList', JSON.stringify(scanHistory)); }
     function triggerPrint() { try { window.print(); } catch (err) { console.error("Print blocked:", err); } }
 
     // --- RENDER ---
@@ -667,6 +718,32 @@
         });
       } else {
         groupsSection.style.display = 'none';
+      }
+
+      // Render Scan History
+      const historySection = document.getElementById('history-section');
+      const historyList = document.getElementById('history-list');
+      if(scanHistory.length > 0) {
+        historySection.style.display = 'block';
+        historyList.innerHTML = '';
+        scanHistory.forEach(hist => {
+          // Escape quotes so they don't break the HTML button
+          const safeDesc = hist.desc ? hist.desc.replace(/'/g, "&apos;").replace(/"/g, "&quot;") : '';
+          
+          historyList.innerHTML += `
+            <div class="scanned-item">
+              <div class="item-details">
+                <span class="item-part">${hist.partNo}</span>
+                <span class="item-desc">${hist.desc || 'No description'} &nbsp;&bull;&nbsp; ${hist.date}</span>
+              </div>
+              <div class="item-actions">
+                <button class="btn-action edit" onclick="addFromHistory('${hist.partNo}', '${safeDesc}')">Re-Add</button>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        historySection.style.display = 'none';
       }
     }
   </script>
