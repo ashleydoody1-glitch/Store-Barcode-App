@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Barcode Sheet Builder</title>
+  <title>Part Picker</title>
   
   <!-- JsBarcode for generating barcodes to print -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -20,6 +19,7 @@
       --danger: #dc3545;
       --success: #28a745;
       --warning: #ffc107;
+      --info: #17a2b8;
       --bg: #f4f7f6;
       --card-bg: #ffffff;
       --text: #333333;
@@ -34,245 +34,95 @@
     }
 
     @media screen {
-      .app-container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-      }
+      .app-container { max-width: 600px; margin: 0 auto; padding: 20px; }
       
-      h1 { 
-        font-size: 24px; 
-        text-align: center; 
-        margin-bottom: 24px; 
-        color: var(--primary);
-      }
+      h1 { font-size: 24px; text-align: center; margin-bottom: 24px; color: var(--primary); }
       
-      .input-card {
-        background: var(--card-bg);
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        margin-bottom: 24px;
-        transition: all 0.3s ease;
-      }
+      .input-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; transition: all 0.3s ease; }
+      .input-card.editing { border: 2px solid var(--warning); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); }
       
-      .input-card.editing {
-        border: 2px solid var(--warning);
-        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-      }
+      label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 14px; color: #555; }
       
-      label { 
-        font-weight: 600; 
-        display: block; 
-        margin-bottom: 8px; 
-        font-size: 14px; 
-        color: #555;
-      }
-      
-      .input-row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 16px;
-      }
+      .input-row { display: flex; gap: 10px; margin-bottom: 16px; }
 
-      input[type="text"] {
-        flex-grow: 1;
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-sizing: border-box;
-        font-size: 16px;
-        text-transform: uppercase;
-        transition: border-color 0.2s;
-      }
+      input[type="text"] { flex-grow: 1; width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; text-transform: uppercase; transition: border-color 0.2s; }
+      input[type="text"]:focus { outline: none; border-color: var(--primary); }
       
-      input[type="text"]:focus {
-        outline: none;
-        border-color: var(--primary);
-      }
-      
-      .btn-scan-trigger {
-        background-color: var(--text);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 0 16px;
-        font-weight: bold;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-      }
+      .btn-scan-trigger { background-color: var(--text); color: white; border: none; border-radius: 6px; padding: 0 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
 
-      .btn {
-        display: block;
-        width: 100%;
-        padding: 14px;
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
+      .btn { display: block; width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
       .btn:active { opacity: 0.8; }
       
-      .button-group {
-        display: flex;
-        gap: 10px;
-      }
+      .button-group { display: flex; gap: 10px; }
       
       .btn-cancel { background-color: var(--secondary); display: none; }
       .btn-update { background-color: var(--warning); color: #000; }
-      .btn-print { background-color: var(--success); margin-top: 24px; }
+      .btn-print { background-color: var(--success); margin-top: 12px; }
       .btn-group-save { background-color: var(--primary-dark); margin-top: 12px; }
+      .btn-job-save { background-color: var(--info); margin-top: 12px; }
 
-      .btn-clear {
-        background-color: transparent;
-        color: var(--danger);
-        border: 2px solid var(--danger);
-        margin-top: 12px;
-        margin-bottom: 40px;
-      }
+      .btn-clear { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px; margin-bottom: 40px; }
       
-      .list-header { 
-        font-weight: bold; 
-        margin-top: 30px; 
-        margin-bottom: 12px; 
-        font-size: 18px; 
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+      .list-header { font-weight: bold; margin-top: 30px; margin-bottom: 12px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
       
-      .scanned-list {
-        background: var(--card-bg);
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        overflow: hidden;
-        margin-bottom: 10px;
-      }
-      
-      .scanned-item {
-        padding: 12px 16px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      
+      /* Workbench Editing Banner */
+      .editing-banner { background: var(--warning); color: #000; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; display: flex; flex-direction: column; gap: 10px; }
+      .editing-banner-header { display: flex; justify-content: space-between; align-items: center; }
+      .btn-banner-save { background: var(--success); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+      .btn-banner-cancel { background: transparent; color: #000; border: 1px solid #000; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+      .scanned-list { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 10px; }
+      .scanned-item { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
       .scanned-item:last-child { border-bottom: none; }
       
-      .item-checkbox {
-        transform: scale(1.4);
-        margin-right: 5px;
-        cursor: pointer;
-      }
+      .item-checkbox { transform: scale(1.4); margin-right: 5px; cursor: pointer; }
 
-      .item-details {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        overflow: hidden;
-      }
-      
+      .item-details { flex-grow: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
       .item-part { font-weight: bold; font-size: 16px; }
       .item-desc { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       
-      .item-actions {
-        display: flex;
-        gap: 6px;
-      }
-
-      .btn-action {
-        background: transparent;
-        border: 1px solid #ccc;
-        padding: 6px 10px;
-        border-radius: 4px;
-        font-size: 12px;
-        cursor: pointer;
-        font-weight: 600;
-      }
-
+      .item-actions { display: flex; gap: 6px; }
+      .btn-action { background: transparent; border: 1px solid #ccc; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600; }
       .btn-action.edit { color: var(--primary); border-color: var(--primary); }
       .btn-action.remove { color: var(--danger); border-color: var(--danger); }
 
-      .empty-state {
-        padding: 20px;
-        text-align: center;
-        color: #888;
-        font-style: italic;
-      }
+      .empty-state { padding: 20px; text-align: center; color: #888; font-style: italic; }
       
-      .select-all-row {
-        padding: 10px 16px;
-        background: #f8f9fa;
-        border-bottom: 1px solid #eee;
-        font-size: 14px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
+      .select-all-row { padding: 10px 16px; background: #f8f9fa; border-bottom: 1px solid #eee; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
 
-      /* Groups Section */
-      .groups-section {
-        margin-top: 40px;
-        border-top: 2px dashed #ccc;
-        padding-top: 20px;
-      }
-      .group-card {
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 12px;
-      }
-      .group-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      .group-title { font-weight: bold; font-size: 16px; color: var(--primary-dark); }
+      /* Groups & Jobs Section */
+      .groups-section { margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 15px; }
+      .job-section { border-top: 2px dashed var(--info); }
+      
+      .group-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;}
+      .job-card { border-left: 4px solid var(--info); }
+      
+      .group-header { display: flex; justify-content: space-between; align-items: center; }
+      .group-title { font-weight: bold; font-size: 16px; color: var(--text); }
       .group-count { font-size: 12px; color: #666; background: #eee; padding: 2px 6px; border-radius: 10px; }
+      
       .group-actions { display: flex; gap: 8px; }
-      .btn-load { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-      .btn-delete-group { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+      .btn-load { background: var(--primary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 13px;}
+      .btn-view { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 13px;}
+      .btn-edit-group { background: var(--secondary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 13px;}
+      .btn-delete-group { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;}
 
       /* Fullscreen Scanner Modal */
-      #scanner-modal {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.95);
-        z-index: 9999;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-      }
-      #reader {
-        width: 100%;
-        max-width: 500px;
-        background: black;
-      }
-      .btn-close-scanner {
-        margin-top: 20px;
-        background: var(--danger);
-        color: white;
-        padding: 12px 24px;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        font-size: 16px;
-      }
+      #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+      #reader { width: 100%; max-width: 500px; background: black; }
+      .btn-close-scanner { margin-top: 20px; background: var(--danger); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+
+      /* Job Quick Reference Modal */
+      #job-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+      .job-modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
+      .job-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+      .job-modal-title { font-size: 22px; font-weight: bold; color: var(--info); margin: 0; }
+      .job-modal-date { font-size: 13px; color: #888; }
+      .job-modal-item { padding: 12px 0; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 4px;}
+      .job-modal-item:last-child { border-bottom: none; }
+      .job-modal-part { font-size: 20px; font-weight: bold; font-family: monospace; }
+      .job-modal-desc { font-size: 14px; color: #555; }
+      .btn-close-modal { background: var(--text); color: white; padding: 14px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; font-weight: bold; cursor: pointer; font-size: 16px;}
 
       #print-layout { display: none; }
     }
@@ -280,53 +130,14 @@
     /* --- PRINT STYLES (A4 Landscape) --- */
     @media print {
       @page { size: A4 landscape; margin: 10mm; }
-      .app-container, #scanner-modal { display: none !important; }
-      #print-layout {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10mm;
-        width: 100%;
-      }
+      .app-container, #scanner-modal, #job-modal { display: none !important; }
+      #print-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10mm; width: 100%; }
       body { background: white; color: black; }
-      .print-card {
-        border: 1px solid #000;
-        border-radius: 4px;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        height: 160px;
-        box-sizing: border-box;
-        page-break-inside: avoid;
-      }
-      .print-part {
-        font-size: 20px;
-        font-weight: bold;
-        margin-bottom: 6px;
-        font-family: monospace;
-      }
-      .print-desc {
-        font-size: 12px;
-        font-weight: bold;
-        text-transform: uppercase;
-        margin-bottom: auto;
-        max-width: 100%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .barcode-wrapper {
-        margin-top: 10px;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-      }
-      .barcode-wrapper svg {
-        max-height: 70px;
-        max-width: 100%;
-      }
+      .print-card { border: 1px solid #000; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 160px; box-sizing: border-box; page-break-inside: avoid; }
+      .print-part { font-size: 20px; font-weight: bold; margin-bottom: 6px; font-family: monospace; }
+      .print-desc { font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: auto; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .barcode-wrapper { margin-top: 10px; width: 100%; display: flex; justify-content: center; }
+      .barcode-wrapper svg { max-height: 70px; max-width: 100%; }
     }
   </style>
 </head>
@@ -338,9 +149,23 @@
     <button class="btn-close-scanner" onclick="stopScanner()">Cancel Scan</button>
   </div>
 
+  <!-- JOB QUICK REFERENCE MODAL -->
+  <div id="job-modal">
+    <div class="job-modal-content">
+      <div class="job-modal-header">
+        <h2 class="job-modal-title" id="job-modal-title">Job Number</h2>
+        <span class="job-modal-date" id="job-modal-date">Date</span>
+      </div>
+      <div id="job-modal-list">
+        <!-- Parts get injected here -->
+      </div>
+      <button class="btn-close-modal" onclick="closeJobModal()">Close Viewer</button>
+    </div>
+  </div>
+
   <!-- MOBILE UI -->
   <div class="app-container">
-    <h1>Barcode Label Builder</h1>
+    <h1>Barcode & Job Card Builder</h1>
     
     <div class="input-card" id="input-card">
       <label for="partNo">Part Number</label>
@@ -349,41 +174,68 @@
         <button class="btn-scan-trigger" onclick="startScanner()" type="button">📷 Scan</button>
       </div>
       
-      <label for="desc">Item Description</label>
+      <label for="desc">Item Description (Optional)</label>
       <input type="text" id="desc" placeholder="" style="margin-bottom: 16px;">
       
       <div class="button-group">
         <button class="btn btn-cancel" id="cancel-btn" onclick="cancelEdit()">Cancel</button>
-        <button class="btn" id="add-btn" onclick="addOrUpdateLabel()">Add to Sheet</button>
+        <button class="btn" id="add-btn" onclick="addOrUpdateLabel()">Add to List</button>
       </div>
     </div>
 
     <!-- Active List Section -->
     <div class="list-header">
-      <span>Labels To Print</span>
+      <span>Active Scan List</span>
       <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="count-badge">0</span>
     </div>
     
+    <!-- Workbench Editing Banner -->
+    <div id="editing-banner" class="editing-banner" style="display: none;">
+      <div class="editing-banner-header">
+        <span id="editing-banner-text">Editing Job/Template...</span>
+      </div>
+      <div style="display:flex; gap: 8px;">
+        <button class="btn-banner-cancel" onclick="cancelContextEdit()">Cancel Edits</button>
+        <button class="btn-banner-save" onclick="saveContextChanges()">Save Changes</button>
+      </div>
+    </div>
+
     <div class="scanned-list">
       <div id="select-all-container" style="display: none;" class="select-all-row">
         <input type="checkbox" id="selectAll" class="item-checkbox" onclick="toggleSelectAll(this)">
         <label for="selectAll" style="margin:0; cursor:pointer;">Select All</label>
       </div>
       <div id="list">
-        <div class="empty-state" id="empty-state">No labels added yet.</div>
+        <div class="empty-state" id="empty-state">No parts scanned yet.</div>
       </div>
     </div>
 
     <!-- Main Actions -->
     <div id="action-buttons" style="display: none;">
-      <button class="btn btn-group-save" onclick="saveSelectedToGroup()">Save Selected to Group</button>
-      <button class="btn btn-print" onclick="triggerPrint()">Print Sheet</button>
-      <button class="btn btn-clear" onclick="clearAllLabels()">Clear All Labels</button>
+      <!-- Normal Mode Buttons -->
+      <div id="normal-actions">
+        <button class="btn btn-job-save" onclick="saveToJobCard()">Save as Job Card</button>
+        <button class="btn btn-group-save" onclick="saveSelectedToGroup()">Save Selected as Template Group</button>
+        <button class="btn btn-print" onclick="triggerPrint()">Print A4 Barcode Sheet</button>
+        <button class="btn btn-clear" onclick="clearAllLabels()">Clear Active List</button>
+      </div>
+      <!-- Workbench Mode Buttons (Only print allowed) -->
+      <div id="workbench-actions" style="display: none;">
+        <button class="btn btn-print" onclick="triggerPrint()">Print A4 Barcode Sheet</button>
+      </div>
     </div>
 
-    <!-- Saved Groups Section -->
+    <!-- Job Cards Section -->
+    <div class="groups-section job-section" id="jobs-section" style="display: none;">
+      <div class="list-header" style="margin-top:0;">My Saved Job Cards</div>
+      <div id="jobs-list">
+        <!-- Job Cards render here -->
+      </div>
+    </div>
+
+    <!-- Saved Template Groups Section -->
     <div class="groups-section" id="groups-section" style="display: none;">
-      <div class="list-header" style="margin-top:0;">My Saved Groups</div>
+      <div class="list-header" style="margin-top:0;">My Template Groups</div>
       <div id="groups-list">
         <!-- Groups render here -->
       </div>
@@ -397,12 +249,13 @@
     // State variables
     let labels = [];
     let savedGroups = [];
-    let editingId = null;
-    let html5QrCode = null; // Scanner instance
+    let savedJobs = [];
+    let editingId = null; // for individual part items
+    let contextEditing = null; // { type: 'job' | 'group', id: string, name: string }
+    let html5QrCode = null;
 
     // Initialization
     window.onload = () => {
-      // Load and scrub active list
       const rawLabels = JSON.parse(localStorage.getItem('savedBarcodeLabels')) || [];
       labels = rawLabels.map(label => ({
         id: label.id,
@@ -411,11 +264,15 @@
         selected: false 
       }));
       
-      // Load groups
       savedGroups = JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [];
+      savedJobs = JSON.parse(localStorage.getItem('savedJobCards')) || [];
       
+      // Load any existing context
+      contextEditing = JSON.parse(localStorage.getItem('editingContext')) || null;
+
       saveData();
       saveGroupsData();
+      saveJobsData();
 
       document.getElementById('partNo').value = "";
       document.getElementById('desc').value = "";
@@ -436,35 +293,23 @@
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'flex';
 
-      // Initialize scanner
       html5QrCode = new Html5Qrcode("reader");
-      
-      // Configuration for reading 1D barcodes primarily
       const config = { 
         fps: 10, 
-        qrbox: { width: 300, height: 150 }, // wide rectangle for barcode
+        qrbox: { width: 300, height: 150 },
         aspectRatio: 1.0,
         formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ]
       };
 
       html5QrCode.start({ facingMode: "environment" }, config, 
-        (decodedText, decodedResult) => {
-          // Success Callback
-          stopScanner(); // Automatically close scanner on successful read
-          
-          // Scrub scanned text just to be safe
+        (decodedText) => {
+          stopScanner(); 
           const cleanText = decodedText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
           document.getElementById('partNo').value = cleanText;
-          
-          // Vibrate if mobile device supports it
           if (navigator.vibrate) navigator.vibrate(100);
-
-          // Focus next input
           document.getElementById('desc').focus();
         },
-        (errorMessage) => {
-          // Failure callback - constantly fires while looking for a barcode, so we ignore it
-        }
+        (errorMessage) => {}
       ).catch((err) => {
         alert("Unable to access camera. Please ensure you have granted camera permissions.");
         stopScanner();
@@ -475,104 +320,62 @@
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'none';
       if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-          html5QrCode.clear();
-          html5QrCode = null;
-        }).catch(err => {
-          console.error("Failed to stop scanner", err);
-        });
+        html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(err => console.error(err));
       }
     }
 
-    // --- ADD or UPDATE Label ---
+    // --- ADD or UPDATE Label (Individual Parts) ---
     function addOrUpdateLabel() {
       const partNoInput = document.getElementById('partNo');
       const descInput = document.getElementById('desc');
       
-      // Filter out spaces/special chars completely
       const partNo = partNoInput.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
       const desc = descInput.value.trim().toUpperCase();
 
-      if(!partNo) {
-        alert("Please enter a valid part number.");
-        partNoInput.focus();
-        return;
-      }
+      if(!partNo) { alert("Please enter a valid part number."); partNoInput.focus(); return; }
 
       if (editingId) {
         const index = labels.findIndex(l => l.id === editingId);
-        if(index > -1) {
-          labels[index].partNo = partNo;
-          labels[index].desc = desc;
-        }
+        if(index > -1) { labels[index].partNo = partNo; labels[index].desc = desc; }
         cancelEdit(); 
       } else {
-        const newLabel = {
-          id: Date.now().toString(),
-          partNo: partNo,
-          desc: desc,
-          selected: false
-        };
-        labels.push(newLabel);
+        labels.push({ id: Date.now().toString(), partNo: partNo, desc: desc, selected: false });
       }
 
       saveData();
-      
-      partNoInput.value = "";
-      descInput.value = "";
-      partNoInput.focus();
-
+      partNoInput.value = ""; descInput.value = ""; partNoInput.focus();
       renderUI();
     }
 
-    // --- EDITING LOGIC ---
     function editLabel(id) {
       const label = labels.find(l => l.id === id);
       if(!label) return;
-      
       editingId = id;
       document.getElementById('partNo').value = label.partNo;
       document.getElementById('desc').value = label.desc;
       
-      const inputCard = document.getElementById('input-card');
-      inputCard.classList.add('editing');
-      
+      document.getElementById('input-card').classList.add('editing');
       const addBtn = document.getElementById('add-btn');
-      addBtn.innerText = "Update Label";
-      addBtn.classList.add('btn-update');
-      
+      addBtn.innerText = "Update Label"; addBtn.classList.add('btn-update');
       document.getElementById('cancel-btn').style.display = 'block';
-      
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelEdit() {
       editingId = null;
-      document.getElementById('partNo').value = "";
-      document.getElementById('desc').value = "";
-      
-      const inputCard = document.getElementById('input-card');
-      inputCard.classList.remove('editing');
-      
+      document.getElementById('partNo').value = ""; document.getElementById('desc').value = "";
+      document.getElementById('input-card').classList.remove('editing');
       const addBtn = document.getElementById('add-btn');
-      addBtn.innerText = "Add to Sheet";
-      addBtn.classList.remove('btn-update');
-      
+      addBtn.innerText = "Add to List"; addBtn.classList.remove('btn-update');
       document.getElementById('cancel-btn').style.display = 'none';
     }
 
     // --- LIST MANAGEMENT ---
-    function removeLabel(id) {
-      labels = labels.filter(label => label.id !== id);
-      saveData();
-      renderUI();
-    }
-
+    function removeLabel(id) { labels = labels.filter(label => label.id !== id); saveData(); renderUI(); }
+    
     function clearAllLabels() {
-      if(confirm("Are you sure you want to clear the active list? (Saved groups will not be deleted)")) {
-        labels = [];
-        saveData();
-        renderUI();
+      if(confirm("Are you sure you want to clear the active list?")) {
+        labels = []; saveData(); renderUI();
       }
     }
 
@@ -583,171 +386,284 @@
     }
 
     function toggleSelectAll(checkbox) {
-      const isChecked = checkbox.checked;
-      labels.forEach(l => l.selected = isChecked);
+      labels.forEach(l => l.selected = checkbox.checked);
       renderUI();
     }
 
     function checkSelectAllState() {
-      const allChecked = labels.length > 0 && labels.every(l => l.selected);
-      document.getElementById('selectAll').checked = allChecked;
+      document.getElementById('selectAll').checked = labels.length > 0 && labels.every(l => l.selected);
     }
 
-    // --- GROUP MANAGEMENT ---
-    function saveSelectedToGroup() {
-      const selectedLabels = labels.filter(l => l.selected);
-      
-      if(selectedLabels.length === 0) {
-        alert("Please check the boxes next to the parts you want to save in a group.");
-        return;
+    // --- WORKBENCH CONTEXT EDITING (Jobs/Groups) ---
+    function loadContextToWorkbench(type, id) {
+      if (labels.length > 0) {
+        if(!confirm("Warning: Loading this will clear your current active list. Do you want to proceed?")) {
+          return;
+        }
       }
-      
-      const groupName = prompt("Enter a name for this group (e.g. 'Daily Service Kit'):");
-      if(!groupName || groupName.trim() === "") return;
 
-      const groupItems = selectedLabels.map(l => ({
-        partNo: l.partNo,
-        desc: l.desc
+      let sourceItem = null;
+      if (type === 'job') sourceItem = savedJobs.find(j => j.id === id);
+      if (type === 'group') sourceItem = savedGroups.find(g => g.id === id);
+
+      if (!sourceItem) return;
+
+      contextEditing = { type: type, id: id, name: sourceItem.name };
+      localStorage.setItem('editingContext', JSON.stringify(contextEditing));
+
+      // Load items into active list with fresh active IDs
+      labels = sourceItem.items.map(item => ({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+        partNo: item.partNo,
+        desc: item.desc,
+        selected: false
       }));
-
-      const newGroup = {
-        id: "group_" + Date.now().toString(),
-        name: groupName.trim(),
-        items: groupItems
-      };
-
-      savedGroups.push(newGroup);
-      saveGroupsData();
-      
-      labels.forEach(l => l.selected = false);
-      renderUI();
-      
-      alert(`Group "${newGroup.name}" saved successfully!`);
-    }
-
-    function loadGroup(groupId) {
-      const group = savedGroups.find(g => g.id === groupId);
-      if(!group) return;
-
-      group.items.forEach(item => {
-        labels.push({
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-          partNo: item.partNo,
-          desc: item.desc,
-          selected: false
-        });
-      });
 
       saveData();
       renderUI();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function deleteGroup(groupId) {
-      if(confirm("Delete this saved group permanently?")) {
-        savedGroups = savedGroups.filter(g => g.id !== groupId);
+    function saveContextChanges() {
+      if (!contextEditing) return;
+      if (labels.length === 0) {
+        alert("The list is empty. If you want to delete this entirely, please use the Delete button below.");
+        return;
+      }
+
+      const updatedItems = labels.map(l => ({ partNo: l.partNo, desc: l.desc }));
+
+      if (contextEditing.type === 'job') {
+        const idx = savedJobs.findIndex(j => j.id === contextEditing.id);
+        if(idx > -1) savedJobs[idx].items = updatedItems;
+        saveJobsData();
+      } else if (contextEditing.type === 'group') {
+        const idx = savedGroups.findIndex(g => g.id === contextEditing.id);
+        if(idx > -1) savedGroups[idx].items = updatedItems;
         saveGroupsData();
+      }
+
+      alert(`${contextEditing.type === 'job' ? 'Job Card' : 'Template'} "${contextEditing.name}" updated successfully!`);
+      
+      // Clear context and active list
+      contextEditing = null;
+      localStorage.removeItem('editingContext');
+      labels = [];
+      saveData();
+      renderUI();
+    }
+
+    function cancelContextEdit() {
+      if(confirm("Are you sure you want to cancel? Any changes made to this list will NOT be saved to the Job/Template.")) {
+        contextEditing = null;
+        localStorage.removeItem('editingContext');
+        labels = [];
+        saveData();
         renderUI();
       }
     }
 
-    // --- STORAGE ---
+    // --- JOB CARD MANAGEMENT ---
+    function saveToJobCard() {
+      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
+      const jobName = prompt("Enter Job Number or Reference (e.g. WO-1234):");
+      if(!jobName || jobName.trim() === "") return;
+
+      const newJob = {
+        id: "job_" + Date.now().toString(),
+        name: jobName.trim().toUpperCase(),
+        date: new Date().toLocaleDateString(),
+        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc }))
+      };
+
+      savedJobs.push(newJob);
+      saveJobsData();
+      
+      if(confirm(`Job "${newJob.name}" saved! Clear the active list to start your next job?`)) {
+        labels = []; saveData();
+      }
+      renderUI();
+    }
+
+    function viewJob(id) {
+      const job = savedJobs.find(j => j.id === id);
+      if(!job) return;
+      
+      document.getElementById('job-modal-title').innerText = "Job: " + job.name;
+      document.getElementById('job-modal-date').innerText = job.date;
+      
+      const listContainer = document.getElementById('job-modal-list');
+      listContainer.innerHTML = '';
+      
+      job.items.forEach(item => {
+        listContainer.innerHTML += `
+          <div class="job-modal-item">
+            <span class="job-modal-part">${item.partNo}</span>
+            <span class="job-modal-desc">${item.desc || 'No description'}</span>
+          </div>
+        `;
+      });
+      document.getElementById('job-modal').style.display = 'flex';
+    }
+
+    function closeJobModal() { document.getElementById('job-modal').style.display = 'none'; }
+    function deleteJob(id) {
+      if(confirm("Are you sure you want to delete this completed Job Card?")) {
+        savedJobs = savedJobs.filter(j => j.id !== id); saveJobsData(); renderUI();
+      }
+    }
+
+    // --- GROUP (TEMPLATE) MANAGEMENT ---
+    function saveSelectedToGroup() {
+      const selectedLabels = labels.filter(l => l.selected);
+      if(selectedLabels.length === 0) { alert("Please check the boxes next to the parts you want to save as a template."); return; }
+      
+      const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):");
+      if(!groupName || groupName.trim() === "") return;
+
+      savedGroups.push({
+        id: "group_" + Date.now().toString(),
+        name: groupName.trim(),
+        items: selectedLabels.map(l => ({ partNo: l.partNo, desc: l.desc }))
+      });
+
+      saveGroupsData();
+      labels.forEach(l => l.selected = false);
+      renderUI();
+      alert(`Template "${groupName}" saved successfully!`);
+    }
+
+    function loadGroup(groupId) {
+      const group = savedGroups.find(g => g.id === groupId);
+      if(!group) return;
+      group.items.forEach(item => {
+        labels.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), partNo: item.partNo, desc: item.desc, selected: false });
+      });
+      saveData(); renderUI(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteGroup(groupId) {
+      if(confirm("Delete this saved template permanently?")) {
+        savedGroups = savedGroups.filter(g => g.id !== groupId); saveGroupsData(); renderUI();
+      }
+    }
+
+    // --- STORAGE & PRINT ---
     function saveData() { localStorage.setItem('savedBarcodeLabels', JSON.stringify(labels)); }
     function saveGroupsData() { localStorage.setItem('savedBarcodeGroups', JSON.stringify(savedGroups)); }
-
-    function triggerPrint() {
-      try { window.print(); } catch (err) { console.error("Print blocked:", err); }
-    }
+    function saveJobsData() { localStorage.setItem('savedJobCards', JSON.stringify(savedJobs)); }
+    function triggerPrint() { try { window.print(); } catch (err) { console.error("Print blocked:", err); } }
 
     // --- RENDER ---
     function renderUI() {
       const listContainer = document.getElementById('list');
       const printContainer = document.getElementById('print-layout');
-      const selectAllContainer = document.getElementById('select-all-container');
       const actionButtons = document.getElementById('action-buttons');
-      const countBadge = document.getElementById('count-badge');
-      const groupsSection = document.getElementById('groups-section');
-      const groupsListContainer = document.getElementById('groups-list');
+      const banner = document.getElementById('editing-banner');
+      const normalActions = document.getElementById('normal-actions');
+      const workbenchActions = document.getElementById('workbench-actions');
+      
+      document.getElementById('count-badge').innerText = labels.length;
 
-      countBadge.innerText = labels.length;
+      // Handle Context Editing UI
+      if (contextEditing) {
+        banner.style.display = 'flex';
+        document.getElementById('editing-banner-text').innerText = `WORKBENCH: Editing ${contextEditing.type === 'job' ? 'Job' : 'Template'} "${contextEditing.name}"`;
+        normalActions.style.display = 'none';
+        workbenchActions.style.display = 'block';
+      } else {
+        banner.style.display = 'none';
+        normalActions.style.display = 'block';
+        workbenchActions.style.display = 'none';
+      }
       
       if (labels.length > 0) {
-        selectAllContainer.style.display = 'flex';
+        document.getElementById('select-all-container').style.display = 'flex';
         actionButtons.style.display = 'block';
       } else {
-        selectAllContainer.style.display = 'none';
-        actionButtons.style.display = 'none';
+        document.getElementById('select-all-container').style.display = 'none';
+        actionButtons.style.display = contextEditing ? 'block' : 'none';
       }
 
-      listContainer.innerHTML = '';
-      printContainer.innerHTML = '';
+      listContainer.innerHTML = ''; printContainer.innerHTML = '';
 
       if(labels.length === 0) {
-        listContainer.innerHTML = '<div class="empty-state" id="empty-state">No labels added yet.</div>';
+        listContainer.innerHTML = '<div class="empty-state" id="empty-state">No parts scanned yet.</div>';
       } else {
         labels.forEach((label) => {
-          const listItem = document.createElement('div');
-          listItem.className = 'scanned-item';
-          listItem.innerHTML = `
-            <input type="checkbox" class="item-checkbox" ${label.selected ? 'checked' : ''} onchange="toggleSelect('${label.id}', this.checked)">
-            <div class="item-details">
-              <span class="item-part">${label.partNo}</span>
-              <span class="item-desc">${label.desc || 'No description'}</span>
-            </div>
-            <div class="item-actions">
-              <button class="btn-action edit" onclick="editLabel('${label.id}')">Edit</button>
-              <button class="btn-action remove" onclick="removeLabel('${label.id}')">Remove</button>
-            </div>
-          `;
-          listContainer.appendChild(listItem);
-
-          const printCard = document.createElement('div');
-          printCard.className = 'print-card';
-          printCard.innerHTML = `
-            <div class="print-part">${label.partNo}</div>
-            <div class="print-desc">${label.desc}</div>
-            <div class="barcode-wrapper">
-              <svg id="barcode-${label.id}"></svg>
-            </div>
-          `;
-          printContainer.appendChild(printCard);
-
-          try {
-            JsBarcode(`#barcode-${label.id}`, label.partNo, {
-              format: "CODE128",
-              lineColor: "#000",
-              width: 2.5,
-              height: 60,
-              displayValue: false, 
-              margin: 0
-            });
-          } catch (e) {
-            console.error("Barcode generation failed for:", label.partNo);
-          }
-        });
-      }
-      
-      checkSelectAllState();
-
-      if(savedGroups.length > 0) {
-        groupsSection.style.display = 'block';
-        groupsListContainer.innerHTML = '';
-        savedGroups.forEach(group => {
-          const groupCard = document.createElement('div');
-          groupCard.className = 'group-card';
-          groupCard.innerHTML = `
-            <div class="group-header">
-              <div>
-                <span class="group-title">${group.name}</span>
-                <span class="group-count">${group.items.length} parts</span>
+          listContainer.innerHTML += `
+            <div class="scanned-item">
+              <input type="checkbox" class="item-checkbox" ${label.selected ? 'checked' : ''} onchange="toggleSelect('${label.id}', this.checked)">
+              <div class="item-details">
+                <span class="item-part">${label.partNo}</span>
+                <span class="item-desc">${label.desc || 'No description'}</span>
+              </div>
+              <div class="item-actions">
+                <button class="btn-action edit" onclick="editLabel('${label.id}')">Edit</button>
+                <button class="btn-action remove" onclick="removeLabel('${label.id}')">Remove</button>
               </div>
             </div>
-            <div class="group-actions">
-              <button class="btn-load" onclick="loadGroup('${group.id}')">Load to List</button>
-              <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
+          `;
+
+          printContainer.innerHTML += `
+            <div class="print-card">
+              <div class="print-part">${label.partNo}</div>
+              <div class="print-desc">${label.desc}</div>
+              <div class="barcode-wrapper"><svg id="barcode-${label.id}"></svg></div>
             </div>
           `;
-          groupsListContainer.appendChild(groupCard);
+          
+          setTimeout(() => {
+            try { JsBarcode(`#barcode-${label.id}`, label.partNo, { format: "CODE128", lineColor: "#000", width: 2.5, height: 60, displayValue: false, margin: 0 }); } catch (e) {}
+          }, 0);
+        });
+      }
+      checkSelectAllState();
+
+      // Render Job Cards
+      const jobsSection = document.getElementById('jobs-section');
+      const jobsList = document.getElementById('jobs-list');
+      if(savedJobs.length > 0) {
+        jobsSection.style.display = 'block';
+        jobsList.innerHTML = '';
+        savedJobs.forEach(job => {
+          jobsList.innerHTML += `
+            <div class="group-card job-card">
+              <div class="group-header">
+                <div><span class="group-title">${job.name}</span> <span class="group-count" style="margin-left: 5px;">${job.items.length} parts</span></div>
+                <div style="font-size:12px; color:#888;">${job.date}</div>
+              </div>
+              <div class="group-actions">
+                <button class="btn-view" onclick="viewJob('${job.id}')">View</button>
+                <button class="btn-edit-group" onclick="loadContextToWorkbench('job', '${job.id}')">Edit</button>
+                <button class="btn-delete-group" onclick="deleteJob('${job.id}')">Delete</button>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        jobsSection.style.display = 'none';
+      }
+
+      // Render Template Groups
+      const groupsSection = document.getElementById('groups-section');
+      const groupsList = document.getElementById('groups-list');
+      if(savedGroups.length > 0) {
+        groupsSection.style.display = 'block';
+        groupsList.innerHTML = '';
+        savedGroups.forEach(group => {
+          groupsList.innerHTML += `
+            <div class="group-card">
+              <div class="group-header">
+                <div><span class="group-title">${group.name}</span> <span class="group-count">${group.items.length} parts</span></div>
+              </div>
+              <div class="group-actions">
+                <button class="btn-load" onclick="loadGroup('${group.id}')">Load</button>
+                <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
+                <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
+              </div>
+            </div>
+          `;
         });
       } else {
         groupsSection.style.display = 'none';
