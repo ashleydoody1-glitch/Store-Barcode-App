@@ -57,8 +57,9 @@
       
       .btn-cancel { background-color: var(--secondary); display: none; }
       .btn-update { background-color: var(--warning); color: #000; }
-      .btn-print { background-color: var(--success); margin-top: 12px; }
-      .btn-group-save { background-color: var(--primary-dark); margin-top: 12px; }
+      .btn-group-save { background-color: var(--success); margin-top: 12px; display: none; }
+      .btn-group-init { background-color: var(--primary-dark); margin-top: 12px; }
+      .btn-group-cancel { background-color: var(--secondary); margin-top: 6px; display: none; }
       .btn-job-save { background-color: var(--info); margin-top: 12px; }
 
       .btn-clear { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px; margin-bottom: 40px; }
@@ -67,7 +68,10 @@
       
       /* Workbench Editing Banner */
       .editing-banner { background: var(--warning); color: #000; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; display: flex; flex-direction: column; gap: 10px; }
-      .editing-banner-header { display: flex; justify-content: space-between; align-items: center; }
+      .editing-banner-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+      .editing-banner-title { flex-grow: 1; }
+      .btn-banner-rename { background: transparent; border: 1px solid #000; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+      .btn-banner-rename:active { background: rgba(0,0,0,0.1); }
       .btn-banner-save { background: var(--success); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
       .btn-banner-cancel { background: transparent; color: #000; border: 1px solid #000; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
@@ -75,20 +79,24 @@
       .scanned-item { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
       .scanned-item:last-child { border-bottom: none; }
       
-      .item-checkbox { transform: scale(1.4); margin-right: 5px; cursor: pointer; }
+      .item-checkbox { transform: scale(1.4); margin-right: 5px; cursor: pointer; display: none; }
 
-      .item-details { flex-grow: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+      .item-details { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
       .item-part { font-weight: bold; font-size: 16px; }
-      .item-desc { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .item-desc { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
       
+      .oos-badge { color: var(--danger); border: 1px solid var(--danger); padding: 1px 4px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; display: inline-block; white-space: nowrap; line-height: 1.2; }
+
       .item-actions { display: flex; gap: 6px; }
       .btn-action { background: transparent; border: 1px solid #ccc; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600; }
+      .btn-action.oos { color: #666; border-color: #ccc; }
+      .btn-action.oos.active { background-color: var(--danger); color: white; border-color: var(--danger); }
       .btn-action.edit { color: var(--primary); border-color: var(--primary); }
       .btn-action.remove { color: var(--danger); border-color: var(--danger); }
 
       .empty-state { padding: 20px; text-align: center; color: #888; font-style: italic; }
       
-      .select-all-row { padding: 10px 16px; background: #f8f9fa; border-bottom: 1px solid #eee; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+      .select-all-row { padding: 10px 16px; background: #f8f9fa; border-bottom: 1px solid #eee; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; display: none; }
 
       /* Groups & Jobs Section */
       .groups-section { margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 15px; }
@@ -101,11 +109,12 @@
       .group-title { font-weight: bold; font-size: 16px; color: var(--text); }
       .group-count { font-size: 12px; color: #666; background: #eee; padding: 2px 6px; border-radius: 10px; }
       
-      .group-actions { display: flex; gap: 8px; }
-      .btn-load { background: var(--primary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 13px;}
-      .btn-view { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 13px;}
-      .btn-edit-group { background: var(--secondary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 13px;}
-      .btn-delete-group { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+      .group-actions { display: flex; gap: 6px; }
+      .btn-load { background: var(--primary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-view { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-print-group { background: var(--success); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-edit-group { background: var(--secondary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-delete-group { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;}
 
       /* Fullscreen Scanner Modal */
       #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
@@ -120,8 +129,8 @@
       .job-modal-date { font-size: 13px; color: #888; }
       .job-modal-item { padding: 12px 0; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 4px;}
       .job-modal-item:last-child { border-bottom: none; }
-      .job-modal-part { font-size: 20px; font-weight: bold; font-family: monospace; }
-      .job-modal-desc { font-size: 14px; color: #555; }
+      .job-modal-part { font-size: 20px; font-weight: bold; font-family: monospace; display: flex; align-items: center; }
+      .job-modal-desc { font-size: 14px; color: #555; display: flex; align-items: center; }
       .btn-close-modal { background: var(--text); color: white; padding: 14px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; font-weight: bold; cursor: pointer; font-size: 16px;}
 
       #print-layout { display: none; }
@@ -192,7 +201,8 @@
     <!-- Workbench Editing Banner -->
     <div id="editing-banner" class="editing-banner" style="display: none;">
       <div class="editing-banner-header">
-        <span id="editing-banner-text">Editing Job/Template...</span>
+        <span class="editing-banner-title" id="editing-banner-text">Editing Job/Template...</span>
+        <button class="btn-banner-rename" onclick="renameContext()">Rename</button>
       </div>
       <div style="display:flex; gap: 8px;">
         <button class="btn-banner-cancel" onclick="cancelContextEdit()">Cancel Edits</button>
@@ -201,8 +211,8 @@
     </div>
 
     <div class="scanned-list">
-      <div id="select-all-container" style="display: none;" class="select-all-row">
-        <input type="checkbox" id="selectAll" class="item-checkbox" onclick="toggleSelectAll(this)">
+      <div id="select-all-container" class="select-all-row">
+        <input type="checkbox" id="selectAll" class="item-checkbox" onclick="toggleSelectAll(this)" style="display:inline-block;">
         <label for="selectAll" style="margin:0; cursor:pointer;">Select All</label>
       </div>
       <div id="list">
@@ -212,17 +222,11 @@
 
     <!-- Main Actions -->
     <div id="action-buttons" style="display: none;">
-      <!-- Normal Mode Buttons -->
-      <div id="normal-actions">
-        <button class="btn btn-job-save" onclick="saveToJobCard()">Save as Job Card</button>
-        <button class="btn btn-group-save" onclick="saveSelectedToGroup()">Save Selected as Template Group</button>
-        <button class="btn btn-print" onclick="triggerPrint()">Print A4 Barcode Sheet</button>
-        <button class="btn btn-clear" onclick="clearAllLabels()">Clear Active List</button>
-      </div>
-      <!-- Workbench Mode Buttons (Only print allowed) -->
-      <div id="workbench-actions" style="display: none;">
-        <button class="btn btn-print" onclick="triggerPrint()">Print A4 Barcode Sheet</button>
-      </div>
+      <button class="btn btn-job-save" id="btn-job-save" onclick="saveToJobCard()">Save to Job Card</button>
+      <button class="btn btn-group-init" id="btn-group-init" onclick="initGroupSelection()">Save to Template Group</button>
+      <button class="btn btn-group-save" id="btn-group-save" onclick="saveSelectedToGroup()">Save Template</button>
+      <button class="btn btn-group-cancel" id="btn-group-cancel" onclick="cancelGroupSelection()">Cancel Template Selection</button>
+      <button class="btn btn-clear" id="btn-clear" onclick="clearAllLabels()">Clear Active List</button>
     </div>
 
     <!-- Job Cards Section -->
@@ -264,6 +268,7 @@
     let scanHistory = [];
     let editingId = null; // for individual part items
     let contextEditing = null; // { type: 'job' | 'group', id: string, name: string }
+    let isSelectingForGroup = false; // toggles checkboxes on/off
     let html5QrCode = null;
 
     // Initialization
@@ -273,14 +278,14 @@
         id: label.id,
         desc: label.desc,
         partNo: label.partNo.toUpperCase().replace(/[^A-Z0-9\-]/g, ''),
-        selected: false 
+        selected: false,
+        oos: label.oos || false // Out of Stock flag
       }));
       
       savedGroups = JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [];
       savedJobs = JSON.parse(localStorage.getItem('savedJobCards')) || [];
       scanHistory = JSON.parse(localStorage.getItem('scanHistoryList')) || [];
       
-      // Load any existing context
       contextEditing = JSON.parse(localStorage.getItem('editingContext')) || null;
 
       saveData();
@@ -292,7 +297,6 @@
       
       renderUI();
       
-      // Enter key listeners
       document.getElementById('partNo').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') { e.preventDefault(); document.getElementById('desc').focus(); }
       });
@@ -346,13 +350,14 @@
       const desc = descInput.value.trim().toUpperCase();
 
       if(!partNo) { alert("Please enter a valid part number."); partNoInput.focus(); return; }
+      if(!desc) { alert("Please enter an item description."); descInput.focus(); return; }
 
       if (editingId) {
         const index = labels.findIndex(l => l.id === editingId);
         if(index > -1) { labels[index].partNo = partNo; labels[index].desc = desc; }
         cancelEdit(); 
       } else {
-        labels.push({ id: Date.now().toString(), partNo: partNo, desc: desc, selected: false });
+        labels.push({ id: Date.now().toString(), partNo: partNo, desc: desc, selected: false, oos: false });
         addToHistory(partNo, desc);
       }
 
@@ -387,10 +392,33 @@
     // --- LIST MANAGEMENT ---
     function removeLabel(id) { labels = labels.filter(label => label.id !== id); saveData(); renderUI(); }
     
+    function toggleOOS(id) {
+      const label = labels.find(l => l.id === id);
+      if(label) {
+        label.oos = !label.oos;
+        saveData();
+        renderUI();
+      }
+    }
+
     function clearAllLabels() {
       if(confirm("Are you sure you want to clear the active list?")) {
-        labels = []; saveData(); renderUI();
+        labels = [];
+        isSelectingForGroup = false;
+        saveData();
+        renderUI();
       }
+    }
+
+    function initGroupSelection() {
+      isSelectingForGroup = true;
+      renderUI();
+    }
+
+    function cancelGroupSelection() {
+      isSelectingForGroup = false;
+      labels.forEach(l => l.selected = false);
+      renderUI();
     }
 
     function toggleSelect(id, isChecked) {
@@ -410,10 +438,7 @@
 
     // --- SCAN HISTORY LOGIC ---
     function addToHistory(partNo, desc) {
-      // Skip consecutive exact duplicates to keep the log clean
-      if (scanHistory.length > 0 && scanHistory[0].partNo === partNo) {
-        return; 
-      }
+      if (scanHistory.length > 0 && scanHistory[0].partNo === partNo) { return; }
       
       scanHistory.unshift({
         id: 'hist_' + Date.now().toString(),
@@ -422,10 +447,7 @@
         date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString()
       });
       
-      // Cap at 50 items
-      if (scanHistory.length > 50) {
-        scanHistory = scanHistory.slice(0, 50);
-      }
+      if (scanHistory.length > 50) { scanHistory = scanHistory.slice(0, 50); }
       saveHistoryData();
     }
 
@@ -461,17 +483,30 @@
       contextEditing = { type: type, id: id, name: sourceItem.name };
       localStorage.setItem('editingContext', JSON.stringify(contextEditing));
 
-      // Load items into active list with fresh active IDs
       labels = sourceItem.items.map(item => ({
         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
         partNo: item.partNo,
         desc: item.desc,
+        oos: item.oos || false,
         selected: false
       }));
 
+      isSelectingForGroup = false;
       saveData();
       renderUI();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renameContext() {
+      if (!contextEditing) return;
+      const typeName = contextEditing.type === 'job' ? 'Job Number' : 'Template Name';
+      const newName = prompt(`Enter new ${typeName}:`, contextEditing.name);
+      
+      if (newName && newName.trim() !== "") {
+        contextEditing.name = newName.trim().toUpperCase();
+        localStorage.setItem('editingContext', JSON.stringify(contextEditing));
+        renderUI();
+      }
     }
 
     function saveContextChanges() {
@@ -481,22 +516,22 @@
         return;
       }
 
-      const updatedItems = labels.map(l => ({ partNo: l.partNo, desc: l.desc }));
+      const updatedItems = labels.map(l => ({ partNo: l.partNo, desc: l.desc, oos: l.oos }));
 
       if (contextEditing.type === 'job') {
         const idx = savedJobs.findIndex(j => j.id === contextEditing.id);
-        if(idx > -1) savedJobs[idx].items = updatedItems;
+        if(idx > -1) { savedJobs[idx].items = updatedItems; savedJobs[idx].name = contextEditing.name; }
         saveJobsData();
       } else if (contextEditing.type === 'group') {
         const idx = savedGroups.findIndex(g => g.id === contextEditing.id);
-        if(idx > -1) savedGroups[idx].items = updatedItems;
+        if(idx > -1) { savedGroups[idx].items = updatedItems; savedGroups[idx].name = contextEditing.name; }
         saveGroupsData();
       }
 
       alert(`${contextEditing.type === 'job' ? 'Job Card' : 'Template'} "${contextEditing.name}" updated successfully!`);
       
-      // Clear context and active list
       contextEditing = null;
+      isSelectingForGroup = false;
       localStorage.removeItem('editingContext');
       labels = [];
       saveData();
@@ -504,8 +539,9 @@
     }
 
     function cancelContextEdit() {
-      if(confirm("Are you sure you want to cancel? Any changes made to this list will NOT be saved to the Job/Template.")) {
+      if(confirm("Are you sure you want to cancel? Any changes made to this list will NOT be saved.")) {
         contextEditing = null;
+        isSelectingForGroup = false;
         localStorage.removeItem('editingContext');
         labels = [];
         saveData();
@@ -523,14 +559,16 @@
         id: "job_" + Date.now().toString(),
         name: jobName.trim().toUpperCase(),
         date: new Date().toLocaleDateString(),
-        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc }))
+        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, oos: l.oos }))
       };
 
       savedJobs.push(newJob);
       saveJobsData();
       
       if(confirm(`Job "${newJob.name}" saved! Clear the active list to start your next job?`)) {
-        labels = []; saveData();
+        labels = [];
+        isSelectingForGroup = false;
+        saveData();
       }
       renderUI();
     }
@@ -546,10 +584,11 @@
       listContainer.innerHTML = '';
       
       job.items.forEach(item => {
+        const oosBadge = item.oos ? '<span class="oos-badge">ON ORDER</span>' : '';
         listContainer.innerHTML += `
           <div class="job-modal-item">
             <span class="job-modal-part">${item.partNo}</span>
-            <span class="job-modal-desc">${item.desc || 'No description'}</span>
+            <span class="job-modal-desc">${oosBadge}${item.desc || 'No description'}</span>
           </div>
         `;
       });
@@ -563,7 +602,7 @@
       }
     }
 
-    // --- GROUP (TEMPLATE) MANAGEMENT ---
+    // --- GROUP (TEMPLATE) MANAGEMENT & PRINTING ---
     function saveSelectedToGroup() {
       const selectedLabels = labels.filter(l => l.selected);
       if(selectedLabels.length === 0) { alert("Please check the boxes next to the parts you want to save as a template."); return; }
@@ -574,10 +613,11 @@
       savedGroups.push({
         id: "group_" + Date.now().toString(),
         name: groupName.trim(),
-        items: selectedLabels.map(l => ({ partNo: l.partNo, desc: l.desc }))
+        items: selectedLabels.map(l => ({ partNo: l.partNo, desc: l.desc, oos: false }))
       });
 
       saveGroupsData();
+      isSelectingForGroup = false;
       labels.forEach(l => l.selected = false);
       renderUI();
       alert(`Template "${groupName}" saved successfully!`);
@@ -587,8 +627,9 @@
       const group = savedGroups.find(g => g.id === groupId);
       if(!group) return;
       group.items.forEach(item => {
-        labels.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), partNo: item.partNo, desc: item.desc, selected: false });
+        labels.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), partNo: item.partNo, desc: item.desc, oos: false, selected: false });
       });
+      isSelectingForGroup = false;
       saveData(); renderUI(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -598,75 +639,119 @@
       }
     }
 
-    // --- STORAGE & PRINT ---
+    function printGroup(groupId) {
+      const group = savedGroups.find(g => g.id === groupId);
+      if (!group || group.items.length === 0) return;
+
+      const printContainer = document.getElementById('print-layout');
+      printContainer.innerHTML = '';
+
+      group.items.forEach(item => {
+        const printCard = document.createElement('div');
+        printCard.className = 'print-card';
+        printCard.innerHTML = `
+          <div class="print-part">${item.partNo}</div>
+          <div class="print-desc">${item.desc}</div>
+          <div class="barcode-wrapper"><svg id="print-barcode-${item.partNo}"></svg></div>
+        `;
+        printContainer.appendChild(printCard);
+
+        setTimeout(() => {
+          try {
+            JsBarcode(`#print-barcode-${item.partNo}`, item.partNo, {
+              format: "CODE128", lineColor: "#000", width: 2.5, height: 60, displayValue: false, margin: 0
+            });
+          } catch(e) {}
+        }, 50);
+      });
+
+      setTimeout(() => {
+        try { window.print(); } catch(err) { console.error("Print blocked:", err); }
+      }, 200);
+    }
+
+    // --- STORAGE ---
     function saveData() { localStorage.setItem('savedBarcodeLabels', JSON.stringify(labels)); }
     function saveGroupsData() { localStorage.setItem('savedBarcodeGroups', JSON.stringify(savedGroups)); }
     function saveJobsData() { localStorage.setItem('savedJobCards', JSON.stringify(savedJobs)); }
     function saveHistoryData() { localStorage.setItem('scanHistoryList', JSON.stringify(scanHistory)); }
-    function triggerPrint() { try { window.print(); } catch (err) { console.error("Print blocked:", err); } }
 
     // --- RENDER ---
     function renderUI() {
       const listContainer = document.getElementById('list');
-      const printContainer = document.getElementById('print-layout');
       const actionButtons = document.getElementById('action-buttons');
       const banner = document.getElementById('editing-banner');
-      const normalActions = document.getElementById('normal-actions');
-      const workbenchActions = document.getElementById('workbench-actions');
       
       document.getElementById('count-badge').innerText = labels.length;
 
-      // Handle Context Editing UI
       if (contextEditing) {
         banner.style.display = 'flex';
-        document.getElementById('editing-banner-text').innerText = `WORKBENCH: Editing ${contextEditing.type === 'job' ? 'Job' : 'Template'} "${contextEditing.name}"`;
-        normalActions.style.display = 'none';
-        workbenchActions.style.display = 'block';
+        const isJob = (contextEditing.type === 'job');
+        document.getElementById('editing-banner-text').innerText = `WORKBENCH: Editing ${isJob ? 'Job' : 'Template'} "${contextEditing.name}"`;
       } else {
         banner.style.display = 'none';
-        normalActions.style.display = 'block';
-        workbenchActions.style.display = 'none';
       }
       
-      if (labels.length > 0) {
-        document.getElementById('select-all-container').style.display = 'flex';
+      if (labels.length > 0 || contextEditing) {
         actionButtons.style.display = 'block';
       } else {
-        document.getElementById('select-all-container').style.display = 'none';
-        actionButtons.style.display = contextEditing ? 'block' : 'none';
+        actionButtons.style.display = 'none';
+        isSelectingForGroup = false;
       }
 
-      listContainer.innerHTML = ''; printContainer.innerHTML = '';
+      // Handle visibility of template selection buttons vs normal buttons
+      const btnJobSave = document.getElementById('btn-job-save');
+      const btnGroupInit = document.getElementById('btn-group-init');
+      const btnGroupSave = document.getElementById('btn-group-save');
+      const btnGroupCancel = document.getElementById('btn-group-cancel');
+      const btnClear = document.getElementById('btn-clear');
+      const selectAllRow = document.getElementById('select-all-container');
+
+      if (isSelectingForGroup) {
+        btnJobSave.style.display = 'none';
+        btnGroupInit.style.display = 'none';
+        btnGroupSave.style.display = 'block';
+        btnGroupCancel.style.display = 'block';
+        btnClear.style.display = 'none';
+        selectAllRow.style.display = 'flex';
+      } else {
+        btnJobSave.style.display = 'block';
+        btnGroupInit.style.display = 'block';
+        btnGroupSave.style.display = 'none';
+        btnGroupCancel.style.display = 'none';
+        btnClear.style.display = 'block';
+        selectAllRow.style.display = 'none';
+      }
+
+      listContainer.innerHTML = '';
 
       if(labels.length === 0) {
         listContainer.innerHTML = '<div class="empty-state" id="empty-state">No parts scanned yet.</div>';
       } else {
         labels.forEach((label) => {
+          const showOosFeature = (contextEditing && contextEditing.type === 'job') || !contextEditing;
+          const oosBadge = (showOosFeature && label.oos) ? '<span class="oos-badge">ON ORDER</span>' : '';
+          const oosBtnClass = label.oos ? 'btn-action oos active' : 'btn-action oos';
+          const oosBtnText = label.oos ? 'Ordered' : 'On Order';
+          const oosButtonHtml = showOosFeature ? `<button class="${oosBtnClass}" onclick="toggleOOS('${label.id}')">${oosBtnText}</button>` : '';
+
+          // Only display checkbox when actively picking items for a template group
+          const checkboxDisplay = isSelectingForGroup ? 'inline-block' : 'none';
+
           listContainer.innerHTML += `
             <div class="scanned-item">
-              <input type="checkbox" class="item-checkbox" ${label.selected ? 'checked' : ''} onchange="toggleSelect('${label.id}', this.checked)">
+              <input type="checkbox" class="item-checkbox" style="display: ${checkboxDisplay};" ${label.selected ? 'checked' : ''} onchange="toggleSelect('${label.id}', this.checked)">
               <div class="item-details">
                 <span class="item-part">${label.partNo}</span>
-                <span class="item-desc">${label.desc || 'No description'}</span>
+                <span class="item-desc">${oosBadge}${label.desc || 'No description'}</span>
               </div>
               <div class="item-actions">
+                ${oosButtonHtml}
                 <button class="btn-action edit" onclick="editLabel('${label.id}')">Edit</button>
                 <button class="btn-action remove" onclick="removeLabel('${label.id}')">Remove</button>
               </div>
             </div>
           `;
-
-          printContainer.innerHTML += `
-            <div class="print-card">
-              <div class="print-part">${label.partNo}</div>
-              <div class="print-desc">${label.desc}</div>
-              <div class="barcode-wrapper"><svg id="barcode-${label.id}"></svg></div>
-            </div>
-          `;
-          
-          setTimeout(() => {
-            try { JsBarcode(`#barcode-${label.id}`, label.partNo, { format: "CODE128", lineColor: "#000", width: 2.5, height: 60, displayValue: false, margin: 0 }); } catch (e) {}
-          }, 0);
         });
       }
       checkSelectAllState();
@@ -710,6 +795,7 @@
               </div>
               <div class="group-actions">
                 <button class="btn-load" onclick="loadGroup('${group.id}')">Load</button>
+                <button class="btn-print-group" onclick="printGroup('${group.id}')">Print</button>
                 <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
                 <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
               </div>
@@ -727,9 +813,7 @@
         historySection.style.display = 'block';
         historyList.innerHTML = '';
         scanHistory.forEach(hist => {
-          // Escape quotes so they don't break the HTML button
           const safeDesc = hist.desc ? hist.desc.replace(/'/g, "&apos;").replace(/"/g, "&quot;") : '';
-          
           historyList.innerHTML += `
             <div class="scanned-item">
               <div class="item-details">
@@ -749,3 +833,4 @@
   </script>
 </body>
 </html>
+
