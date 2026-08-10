@@ -197,12 +197,12 @@
       </div>
 
       <!-- Tab 2: Screen Batch QR Code View -->
-      <div class="tab-content active" id="tab-content-qr">
+      <div class="tab-content" id="tab-content-qr">
         <div class="qr-container">
           <div id="qrcode-box"></div>
           <div class="qr-instructions">
-            <strong>Ready to scan</strong><br>
-            Zap this QR code to enter all parts in one scan. Each part number will appear on a seperate line.
+            <strong>Ready for 2D Scanner!</strong><br>
+            Zap this QR code with your imager scanner at the computer to enter all parts in one scan.
           </div>
         </div>
       </div>
@@ -270,13 +270,13 @@
       </div>
     </div>
 
-    <!-- Saved Template Groups Section -->
-    <div class="groups-section" id="groups-section" style="display: none;">
+    <!-- Saved Template Groups Section (Always Visible) -->
+    <div class="groups-section" id="groups-section" style="display: block;">
       <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
         <span>My Template Groups</span>
         <button class="btn-action edit" onclick="saveActiveListAsTemplate()" style="font-weight:bold; border-color:var(--primary); color:var(--primary); padding: 4px 10px;">+ Save Current List</button>
       </div>
-      <div id="groups-list">
+      <div id="groups-list" class="scanned-list" style="box-shadow:none; background:transparent;">
         <!-- Groups render here -->
       </div>
     </div>
@@ -297,7 +297,6 @@
   <div id="print-layout"></div>
 
   <script>
-    // State variables
     let labels = [];
     let savedGroups = [];
     let savedJobs = [];
@@ -579,15 +578,11 @@
     function viewJob(id) {
       const job = savedJobs.find(j => j.id === id);
       if(!job) return;
-      
-      // For saved job cards, default to list view as requested previously
       openModal(job.name, job.date, job.items, 'list');
     }
 
     function showActiveListQr() {
       if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
-      
-      // For active list QR generation, open straight to the QR tab!
       openModal("ACTIVE LIST", new Date().toLocaleDateString(), labels, 'qr');
     }
 
@@ -596,7 +591,6 @@
       document.getElementById('job-modal-date').innerText = dateStr;
       qrDataList = items;
       
-      // Populate Text List View
       const listContainer = document.getElementById('job-modal-list');
       listContainer.innerHTML = '';
       
@@ -666,7 +660,7 @@
 
     // --- TEMPLATE GROUP MANAGEMENT & PRINTING ---
     function saveActiveListAsTemplate() {
-      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
+      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first before saving as a template!"); return; }
       
       const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):");
       if(!groupName || groupName.trim() === "") return;
@@ -809,12 +803,10 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups
-      const groupsSection = document.getElementById('groups-section');
+      // Render Template Groups (Always visible with empty state)
       const groupsList = document.getElementById('groups-list');
+      groupsList.innerHTML = '';
       if(savedGroups.length > 0) {
-        groupsSection.style.display = 'block';
-        groupsList.innerHTML = '';
         savedGroups.forEach(group => {
           groupsList.innerHTML += `
             <div class="group-card">
@@ -831,7 +823,7 @@
           `;
         });
       } else {
-        groupsSection.style.display = 'none';
+        groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Scan parts above and click "+ Save Current List" to create one.</div>';
       }
 
       // Scan History
