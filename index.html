@@ -197,7 +197,7 @@
       </div>
 
       <!-- Tab 2: Screen Batch QR Code View -->
-      <div class="tab-content" id="tab-content-qr">
+      <div class="tab-content active" id="tab-content-qr">
         <div class="qr-container">
           <div id="qrcode-box"></div>
           <div class="qr-instructions">
@@ -218,7 +218,7 @@
     <div class="input-card" id="input-card">
       <label for="partNo">Part Number</label>
       <div class="input-row">
-        <input type="text" id="partNo" placeholder="">
+        <input type="text" id="partNo" placeholder="" oninput="lookupPartDescription(this.value)">
         <button class="btn-scan-trigger" onclick="startScanner()" type="button">📷 Scan</button>
       </div>
       
@@ -270,13 +270,13 @@
       </div>
     </div>
 
-    <!-- Saved Template Groups Section (Always Visible) -->
-    <div class="groups-section" id="groups-section" style="display: block;">
+    <!-- Saved Template Groups Section -->
+    <div class="groups-section" id="groups-section">
       <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
         <span>My Template Groups</span>
         <button class="btn-action edit" onclick="saveActiveListAsTemplate()" style="font-weight:bold; border-color:var(--primary); color:var(--primary); padding: 4px 10px;">+ Save Current List</button>
       </div>
-      <div id="groups-list" class="scanned-list" style="box-shadow:none; background:transparent;">
+      <div id="groups-list">
         <!-- Groups render here -->
       </div>
     </div>
@@ -297,6 +297,7 @@
   <div id="print-layout"></div>
 
   <script>
+    // State variables
     let labels = [];
     let savedGroups = [];
     let savedJobs = [];
@@ -339,6 +340,43 @@
       });
     };
 
+    // --- AUTO-LOOKUP DESCRIPTION LOGIC ---
+    function lookupPartDescription(val) {
+      const cleanPart = val.toUpperCase().replace(/[^A-Z0-9\-]/g, '').trim();
+      if (!cleanPart) return;
+
+      const descInput = document.getElementById('desc');
+      // Only auto-populate if the description box is currently empty
+      if (descInput.value.trim() !== "") return;
+
+      let foundDesc = null;
+
+      // 1. Check Scan History
+      const histMatch = scanHistory.find(h => h.partNo === cleanPart && h.desc);
+      if (histMatch) { foundDesc = histMatch.desc; }
+
+      // 2. Check Saved Job Cards
+      if (!foundDesc) {
+        for (const job of savedJobs) {
+          const itemMatch = job.items.find(i => i.partNo === cleanPart && i.desc);
+          if (itemMatch) { foundDesc = itemMatch.desc; break; }
+        }
+      }
+
+      // 3. Check Template Groups
+      if (!foundDesc) {
+        for (const group of savedGroups) {
+          const itemMatch = group.items.find(i => i.partNo === cleanPart && i.desc);
+          if (itemMatch) { foundDesc = itemMatch.desc; break; }
+        }
+      }
+
+      // If we found a description anywhere, auto-fill it!
+      if (foundDesc) {
+        descInput.value = foundDesc;
+      }
+    }
+
     // --- CAMERA SCANNER LOGIC ---
     function startScanner() {
       const modal = document.getElementById('scanner-modal');
@@ -356,7 +394,10 @@
         (decodedText) => {
           stopScanner(); 
           const cleanText = decodedText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
-          document.getElementById('partNo').value = cleanText;
+          const partInput = document.getElementById('partNo');
+          partInput.value = cleanText;
+          lookupPartDescription(cleanText); // Trigger auto lookup immediately
+
           if (navigator.vibrate) navigator.vibrate(100);
           document.getElementById('desc').focus();
         },
@@ -445,7 +486,8 @@
 
     // --- SCAN HISTORY LOGIC ---
     function addToHistory(partNo, desc) {
-      if (scanHistory.length > 0 && scanHistory[0].partNo === partNo) { return; }
+      // Remove older entries of the same part number to prevent duplicate clutter
+      scanHistory = scanHistory.filter(h => h.partNo !== partNo);
       
       scanHistory.unshift({
         id: 'hist_' + Date.now().toString(),
@@ -660,7 +702,7 @@
 
     // --- TEMPLATE GROUP MANAGEMENT & PRINTING ---
     function saveActiveListAsTemplate() {
-      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first before saving as a template!"); return; }
+      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
       
       const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):");
       if(!groupName || groupName.trim() === "") return;
@@ -803,10 +845,10 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups (Always visible with empty state)
+      // Render Template Groups (Always visible now)
       const groupsList = document.getElementById('groups-list');
-      groupsList.innerHTML = '';
       if(savedGroups.length > 0) {
+        groupsList.innerHTML = '';
         savedGroups.forEach(group => {
           groupsList.innerHTML += `
             <div class="group-card">
@@ -823,7 +865,7 @@
           `;
         });
       } else {
-        groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Scan parts above and click "+ Save Current List" to create one.</div>';
+        groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Click "+ Save Current List" above to create one.</div>';
       }
 
       // Scan History
