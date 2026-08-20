@@ -54,9 +54,13 @@
       label { font-weight: 600; display: block; margin-bottom: 8px; font-size: 14px; color: #555; }
       
       .input-row { display: flex; gap: 10px; margin-bottom: 16px; }
+      .input-row-split { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-end; }
+      .input-row-split > div { flex-grow: 1; }
+      .input-row-split > div.qty-container { flex-grow: 0; width: 90px; }
 
-      input[type="text"] { flex-grow: 1; width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; text-transform: uppercase; transition: border-color 0.2s; }
-      input[type="text"]:focus { outline: none; border-color: var(--primary); }
+      input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; transition: border-color 0.2s; }
+      input[type="text"] { text-transform: uppercase; }
+      input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: var(--primary); }
       
       .btn-scan-trigger { background-color: var(--text); color: white; border: none; border-radius: 6px; padding: 0 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
 
@@ -84,12 +88,18 @@
       .btn-banner-cancel { background: transparent; color: #000; border: 1px solid #000; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
       .scanned-list { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 10px; }
-      .scanned-item { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
+      .scanned-item { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 6px; }
       .scanned-item:last-child { border-bottom: none; }
 
-      .item-details { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
-      .item-part { font-weight: bold; font-size: 16px; }
-      .item-desc { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+      .item-part-line { font-weight: bold; font-size: 18px; font-family: monospace; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .item-desc-line { font-size: 13px; color: #555; font-weight: 500; word-break: break-word; }
+      
+      .item-footer-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid #f2f2f2; padding-top: 8px; margin-top: 2px; }
+
+      /* Qty Badge */
+      .qty-badge { background: #e2e8f0; color: #1e293b; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; }
+      .qty-btn { background: none; border: none; font-weight: bold; cursor: pointer; padding: 0 4px; font-size: 14px; color: #555; }
+      .qty-btn:hover { color: var(--primary); }
       
       .oos-badge { color: var(--danger); border: 1px solid var(--danger); padding: 1px 4px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; display: inline-block; white-space: nowrap; line-height: 1.2; }
 
@@ -147,7 +157,7 @@
 
       .job-modal-item { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 4px;}
       .job-modal-item:last-child { border-bottom: none; }
-      .job-modal-part { font-size: 18px; font-weight: bold; font-family: monospace; display: flex; align-items: center; }
+      .job-modal-part { font-size: 18px; font-weight: bold; font-family: monospace; display: flex; align-items: center; gap: 8px; }
       .job-modal-desc { font-size: 13px; color: #555; display: flex; align-items: center; }
       .btn-close-modal { background: var(--text); color: white; padding: 14px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; font-weight: bold; cursor: pointer; font-size: 16px;}
 
@@ -202,7 +212,7 @@
           <div id="qrcode-box"></div>
           <div class="qr-instructions">
             <strong>Ready for 2D Scanner!</strong><br>
-            Zap this QR code with your imager scanner at the computer to enter all parts in one scan.
+            Zap this QR code with your imager scanner at the computer to enter each unique part once.
           </div>
         </div>
       </div>
@@ -222,10 +232,18 @@
         <button class="btn-scan-trigger" onclick="startScanner()" type="button">📷 Scan</button>
       </div>
       
-      <label for="desc">Item Description</label>
-      <input type="text" id="desc" placeholder="" style="margin-bottom: 16px;">
+      <div class="input-row-split">
+        <div>
+          <label for="desc">Item Description</label>
+          <input type="text" id="desc" placeholder="">
+        </div>
+        <div class="qty-container">
+          <label for="itemQty">Qty</label>
+          <input type="number" id="itemQty" value="1" min="1" max="999">
+        </div>
+      </div>
       
-      <div class="button-group">
+      <div class="button-group" style="margin-top: 16px;">
         <button class="btn btn-cancel" id="cancel-btn" onclick="cancelEdit()">Cancel</button>
         <button class="btn" id="add-btn" onclick="addOrUpdateLabel()">Add to List</button>
       </div>
@@ -314,6 +332,7 @@
         id: label.id,
         desc: label.desc,
         partNo: label.partNo.toUpperCase().replace(/[^A-Z0-9\-]/g, ''),
+        qty: parseInt(label.qty) || 1,
         oos: label.oos || false
       }));
       
@@ -329,6 +348,7 @@
 
       document.getElementById('partNo').value = "";
       document.getElementById('desc').value = "";
+      document.getElementById('itemQty').value = "1";
       
       renderUI();
       
@@ -336,6 +356,9 @@
         if (e.key === 'Enter') { e.preventDefault(); document.getElementById('desc').focus(); }
       });
       document.getElementById('desc').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('itemQty').focus(); }
+      });
+      document.getElementById('itemQty').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') { e.preventDefault(); addOrUpdateLabel(); }
       });
     };
@@ -346,16 +369,13 @@
       if (!cleanPart) return;
 
       const descInput = document.getElementById('desc');
-      // Only auto-populate if the description box is currently empty
       if (descInput.value.trim() !== "") return;
 
       let foundDesc = null;
 
-      // 1. Check Scan History
       const histMatch = scanHistory.find(h => h.partNo === cleanPart && h.desc);
       if (histMatch) { foundDesc = histMatch.desc; }
 
-      // 2. Check Saved Job Cards
       if (!foundDesc) {
         for (const job of savedJobs) {
           const itemMatch = job.items.find(i => i.partNo === cleanPart && i.desc);
@@ -363,7 +383,6 @@
         }
       }
 
-      // 3. Check Template Groups
       if (!foundDesc) {
         for (const group of savedGroups) {
           const itemMatch = group.items.find(i => i.partNo === cleanPart && i.desc);
@@ -371,7 +390,6 @@
         }
       }
 
-      // If we found a description anywhere, auto-fill it!
       if (foundDesc) {
         descInput.value = foundDesc;
       }
@@ -396,7 +414,7 @@
           const cleanText = decodedText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
           const partInput = document.getElementById('partNo');
           partInput.value = cleanText;
-          lookupPartDescription(cleanText); // Trigger auto lookup immediately
+          lookupPartDescription(cleanText);
 
           if (navigator.vibrate) navigator.vibrate(100);
           document.getElementById('desc').focus();
@@ -420,24 +438,39 @@
     function addOrUpdateLabel() {
       const partNoInput = document.getElementById('partNo');
       const descInput = document.getElementById('desc');
+      const qtyInput = document.getElementById('itemQty');
       
       const partNo = partNoInput.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
       const desc = descInput.value.trim().toUpperCase();
+      const qty = parseInt(qtyInput.value) || 1;
 
       if(!partNo) { alert("Please enter a valid part number."); partNoInput.focus(); return; }
       if(!desc) { alert("Please enter an item description."); descInput.focus(); return; }
 
       if (editingId) {
         const index = labels.findIndex(l => l.id === editingId);
-        if(index > -1) { labels[index].partNo = partNo; labels[index].desc = desc; }
+        if(index > -1) { 
+          labels[index].partNo = partNo; 
+          labels[index].desc = desc; 
+          labels[index].qty = qty; 
+        }
         cancelEdit(); 
       } else {
-        labels.push({ id: Date.now().toString(), partNo: partNo, desc: desc, oos: false });
+        const existing = labels.find(l => l.partNo === partNo);
+        if (existing) {
+          existing.qty += qty;
+          if (desc) existing.desc = desc;
+        } else {
+          labels.push({ id: Date.now().toString(), partNo: partNo, desc: desc, qty: qty, oos: false });
+        }
         addToHistory(partNo, desc);
       }
 
       saveData();
-      partNoInput.value = ""; descInput.value = ""; partNoInput.focus();
+      partNoInput.value = ""; 
+      descInput.value = ""; 
+      qtyInput.value = "1";
+      partNoInput.focus();
       renderUI();
     }
 
@@ -447,6 +480,7 @@
       editingId = id;
       document.getElementById('partNo').value = label.partNo;
       document.getElementById('desc').value = label.desc;
+      document.getElementById('itemQty').value = label.qty || 1;
       
       document.getElementById('input-card').classList.add('editing');
       const addBtn = document.getElementById('add-btn');
@@ -457,11 +491,23 @@
 
     function cancelEdit() {
       editingId = null;
-      document.getElementById('partNo').value = ""; document.getElementById('desc').value = "";
+      document.getElementById('partNo').value = ""; 
+      document.getElementById('desc').value = ""; 
+      document.getElementById('itemQty').value = "1";
       document.getElementById('input-card').classList.remove('editing');
       const addBtn = document.getElementById('add-btn');
       addBtn.innerText = "Add to List"; addBtn.classList.remove('btn-update');
       document.getElementById('cancel-btn').style.display = 'none';
+    }
+
+    // --- QUICK QTY ADJUSTMENTS ---
+    function adjustQty(id, amount) {
+      const label = labels.find(l => l.id === id);
+      if (label) {
+        label.qty = Math.max(1, (parseInt(label.qty) || 1) + amount);
+        saveData();
+        renderUI();
+      }
     }
 
     // --- LIST MANAGEMENT ---
@@ -486,7 +532,6 @@
 
     // --- SCAN HISTORY LOGIC ---
     function addToHistory(partNo, desc) {
-      // Remove older entries of the same part number to prevent duplicate clutter
       scanHistory = scanHistory.filter(h => h.partNo !== partNo);
       
       scanHistory.unshift({
@@ -503,6 +548,7 @@
     function addFromHistory(partNo, desc) {
       document.getElementById('partNo').value = partNo;
       document.getElementById('desc').value = desc;
+      document.getElementById('itemQty').value = "1";
       addOrUpdateLabel();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -536,6 +582,7 @@
         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
         partNo: item.partNo,
         desc: item.desc,
+        qty: parseInt(item.qty) || 1,
         oos: item.oos || false
       }));
 
@@ -563,7 +610,7 @@
         return;
       }
 
-      const updatedItems = labels.map(l => ({ partNo: l.partNo, desc: l.desc, oos: l.oos }));
+      const updatedItems = labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: l.oos }));
 
       if (contextEditing.type === 'job') {
         const idx = savedJobs.findIndex(j => j.id === contextEditing.id);
@@ -604,7 +651,7 @@
         id: "job_" + Date.now().toString(),
         name: jobName.trim().toUpperCase(),
         date: new Date().toLocaleDateString(),
-        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, oos: l.oos }))
+        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: l.oos }))
       };
 
       savedJobs.push(newJob);
@@ -638,9 +685,10 @@
       
       items.forEach(item => {
         const oosBadge = item.oos ? '<span class="oos-badge">ON ORDER</span>' : '';
+        const qtyDisplay = (item.qty && item.qty > 1) ? ` <span style="background:#e2e8f0; padding:1px 6px; border-radius:8px; font-size:12px;">x${item.qty}</span>` : '';
         listContainer.innerHTML += `
           <div class="job-modal-item">
-            <span class="job-modal-part">${item.partNo}</span>
+            <span class="job-modal-part">${item.partNo} ${qtyDisplay}</span>
             <span class="job-modal-desc">${oosBadge}${item.desc || 'No description'}</span>
           </div>
         `;
@@ -677,7 +725,8 @@
 
       if (!qrDataList || qrDataList.length === 0) return;
 
-      const batchString = qrDataList.map(i => i.partNo).join('\n');
+      const uniquePartsArray = qrDataList.map(i => i.partNo);
+      const batchString = uniquePartsArray.join('\n');
 
       new QRCode(qrBox, {
         text: batchString,
@@ -710,7 +759,7 @@
       savedGroups.push({
         id: "group_" + Date.now().toString(),
         name: groupName.trim().toUpperCase(),
-        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, oos: false }))
+        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: false }))
       });
 
       saveGroupsData();
@@ -722,7 +771,13 @@
       const group = savedGroups.find(g => g.id === groupId);
       if(!group) return;
       group.items.forEach(item => {
-        labels.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), partNo: item.partNo, desc: item.desc, oos: false });
+        const existing = labels.find(l => l.partNo === item.partNo);
+        const incomingQty = parseInt(item.qty) || 1;
+        if (existing) {
+          existing.qty += incomingQty;
+        } else {
+          labels.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), partNo: item.partNo, desc: item.desc, qty: incomingQty, oos: false });
+        }
       });
       saveData(); renderUI(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -741,22 +796,25 @@
       printContainer.innerHTML = '';
 
       group.items.forEach(item => {
-        const printCard = document.createElement('div');
-        printCard.className = 'print-card';
-        printCard.innerHTML = `
-          <div class="print-part">${item.partNo}</div>
-          <div class="print-desc">${item.desc}</div>
-          <div class="barcode-wrapper"><svg id="print-barcode-${item.partNo}"></svg></div>
-        `;
-        printContainer.appendChild(printCard);
+        const count = parseInt(item.qty) || 1;
+        for(let i=0; i<count; i++) {
+          const printCard = document.createElement('div');
+          printCard.className = 'print-card';
+          printCard.innerHTML = `
+            <div class="print-part">${item.partNo}</div>
+            <div class="print-desc">${item.desc} ${count > 1 ? `(1 of ${count})` : ''}</div>
+            <div class="barcode-wrapper"><svg id="print-barcode-${item.partNo}-${i}"></svg></div>
+          `;
+          printContainer.appendChild(printCard);
 
-        setTimeout(() => {
-          try {
-            JsBarcode(`#print-barcode-${item.partNo}`, item.partNo, {
-              format: "CODE128", lineColor: "#000", width: 2.5, height: 60, displayValue: false, margin: 0
-            });
-          } catch(e) {}
-        }, 50);
+          setTimeout(() => {
+            try {
+              JsBarcode(`#print-barcode-${item.partNo}-${i}`, item.partNo, {
+                format: "CODE128", lineColor: "#000", width: 2.5, height: 60, displayValue: false, margin: 0
+              });
+            } catch(e) {}
+          }, 50);
+        }
       });
 
       setTimeout(() => {
@@ -776,7 +834,7 @@
       const actionButtons = document.getElementById('action-buttons');
       const banner = document.getElementById('editing-banner');
       
-      document.getElementById('count-badge').innerText = labels.length;
+      document.getElementById('count-badge').innerText = labels.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
 
       if (contextEditing) {
         banner.style.display = 'flex';
@@ -804,16 +862,23 @@
           const oosBtnText = label.oos ? 'Ordered' : 'On Order';
           const oosButtonHtml = showOosFeature ? `<button class="${oosBtnClass}" onclick="toggleOOS('${label.id}')">${oosBtnText}</button>` : '';
 
+          const qtyVal = parseInt(label.qty) || 1;
+
           listContainer.innerHTML += `
             <div class="scanned-item">
-              <div class="item-details">
-                <span class="item-part">${label.partNo}</span>
-                <span class="item-desc">${oosBadge}${label.desc || 'No description'}</span>
-              </div>
-              <div class="item-actions">
-                ${oosButtonHtml}
-                <button class="btn-action edit" onclick="editLabel('${label.id}')">Edit</button>
-                <button class="btn-action remove" onclick="removeLabel('${label.id}')">Remove</button>
+              <div class="item-part-line">${label.partNo}</div>
+              <div class="item-desc-line">${oosBadge}${label.desc || 'No description'}</div>
+              <div class="item-footer-row">
+                <div class="qty-badge">
+                  <button class="qty-btn" onclick="adjustQty('${label.id}', -1)">-</button>
+                  <span>Qty: ${qtyVal}</span>
+                  <button class="qty-btn" onclick="adjustQty('${label.id}', 1)">+</button>
+                </div>
+                <div class="item-actions">
+                  ${oosButtonHtml}
+                  <button class="btn-action edit" onclick="editLabel('${label.id}')">Edit</button>
+                  <button class="btn-action remove" onclick="removeLabel('${label.id}')">Remove</button>
+                </div>
               </div>
             </div>
           `;
@@ -827,10 +892,11 @@
         jobsSection.style.display = 'block';
         jobsList.innerHTML = '';
         savedJobs.forEach(job => {
+          const totalJobQty = job.items.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
           jobsList.innerHTML += `
             <div class="group-card job-card">
               <div class="group-header">
-                <div><span class="group-title">${job.name}</span> <span class="group-count" style="margin-left: 5px;">${job.items.length} parts</span></div>
+                <div><span class="group-title">${job.name}</span> <span class="group-count" style="margin-left: 5px;">${totalJobQty} items</span></div>
                 <div style="font-size:12px; color:#888;">${job.date}</div>
               </div>
               <div class="group-actions">
@@ -845,15 +911,16 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups (Always visible now)
+      // Render Template Groups
       const groupsList = document.getElementById('groups-list');
       if(savedGroups.length > 0) {
         groupsList.innerHTML = '';
         savedGroups.forEach(group => {
+          const totalGroupQty = group.items.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
           groupsList.innerHTML += `
             <div class="group-card">
               <div class="group-header">
-                <div><span class="group-title">${group.name}</span> <span class="group-count">${group.items.length} parts</span></div>
+                <div><span class="group-title">${group.name}</span> <span class="group-count">${totalGroupQty} items</span></div>
               </div>
               <div class="group-actions">
                 <button class="btn-load" onclick="loadGroup('${group.id}')">Load</button>
@@ -878,12 +945,13 @@
           const safeDesc = hist.desc ? hist.desc.replace(/'/g, "&apos;").replace(/"/g, "&quot;") : '';
           historyList.innerHTML += `
             <div class="scanned-item">
-              <div class="item-details">
-                <span class="item-part">${hist.partNo}</span>
-                <span class="item-desc">${hist.desc || 'No description'} &nbsp;&bull;&nbsp; ${hist.date}</span>
-              </div>
-              <div class="item-actions">
-                <button class="btn-action edit" onclick="addFromHistory('${hist.partNo}', '${safeDesc}')">Re-Add</button>
+              <div class="item-part-line">${hist.partNo}</div>
+              <div class="item-desc-line">${hist.desc || 'No description'}</div>
+              <div class="item-footer-row">
+                <span style="font-size: 11px; color: #888;">${hist.date}</span>
+                <div class="item-actions">
+                  <button class="btn-action edit" onclick="addFromHistory('${hist.partNo}', '${safeDesc}')">Re-Add</button>
+                </div>
               </div>
             </div>
           `;
@@ -895,4 +963,3 @@
   </script>
 </body>
 </html>
-
