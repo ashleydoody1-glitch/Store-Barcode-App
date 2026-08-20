@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -654,7 +655,8 @@
         items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: l.oos }))
       };
 
-      savedJobs.push(newJob);
+      // Add to TOP of list (newest first)
+      savedJobs.unshift(newJob);
       saveJobsData();
       
       if(confirm(`Job "${newJob.name}" saved! Clear the active list to start your next job?`)) {
@@ -756,15 +758,17 @@
       const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):");
       if(!groupName || groupName.trim() === "") return;
 
-      savedGroups.push({
+      const newGroup = {
         id: "group_" + Date.now().toString(),
         name: groupName.trim().toUpperCase(),
         items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: false }))
-      });
+      };
 
+      // Add to TOP of list (newest first)
+      savedGroups.unshift(newGroup);
       saveGroupsData();
       renderUI();
-      alert(`Template "${groupName.trim().toUpperCase()}" saved successfully!`);
+      alert(`Template "${newGroup.name}" saved successfully!`);
     }
 
     function loadGroup(groupId) {
@@ -885,7 +889,7 @@
         });
       }
 
-      // Render Job Cards
+      // Render Job Cards (Newest First)
       const jobsSection = document.getElementById('jobs-section');
       const jobsList = document.getElementById('jobs-list');
       if(savedJobs.length > 0) {
@@ -911,7 +915,7 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups
+      // Render Template Groups (Newest First)
       const groupsList = document.getElementById('groups-list');
       if(savedGroups.length > 0) {
         groupsList.innerHTML = '';
@@ -963,3 +967,4 @@
   </script>
 </body>
 </html>
+
