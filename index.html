@@ -317,7 +317,6 @@
   <div id="print-layout"></div>
 
   <script>
-    // State variables
     let labels = [];
     let savedGroups = [];
     let savedJobs = [];
@@ -341,7 +340,13 @@
       
       savedGroups = JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [];
       savedJobs = JSON.parse(localStorage.getItem('savedJobCards')) || [];
+      
+      // Load scan history and strictly enforce max 25 items on startup
       scanHistory = JSON.parse(localStorage.getItem('scanHistoryList')) || [];
+      if (scanHistory.length > 25) {
+        scanHistory = scanHistory.slice(0, 25);
+        saveHistoryData();
+      }
       
       contextEditing = JSON.parse(localStorage.getItem('editingContext')) || null;
 
@@ -366,7 +371,6 @@
       });
     };
 
-    // --- AUTO-LOOKUP DESCRIPTION LOGIC ---
     function lookupPartDescription(val) {
       const cleanPart = val.toUpperCase().replace(/[^A-Z0-9\-]/g, '').trim();
       if (!cleanPart) return;
@@ -398,7 +402,6 @@
       }
     }
 
-    // --- CAMERA SCANNER LOGIC ---
     function startScanner() {
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'flex';
@@ -437,7 +440,6 @@
       }
     }
 
-    // --- ADD or UPDATE Label (Individual Parts) ---
     function addOrUpdateLabel() {
       const partNoInput = document.getElementById('partNo');
       const descInput = document.getElementById('desc');
@@ -503,7 +505,6 @@
       document.getElementById('cancel-btn').style.display = 'none';
     }
 
-    // --- QUICK QTY ADJUSTMENTS ---
     function adjustQty(id, amount) {
       const label = labels.find(l => l.id === id);
       if (label) {
@@ -513,7 +514,6 @@
       }
     }
 
-    // --- LIST MANAGEMENT ---
     function removeLabel(id) { labels = labels.filter(label => label.id !== id); saveData(); renderUI(); }
     
     function toggleOOS(id) {
@@ -533,7 +533,6 @@
       }
     }
 
-    // --- SCAN HISTORY LOGIC ---
     function addToHistory(partNo, desc) {
       scanHistory = scanHistory.filter(h => h.partNo !== partNo);
       
@@ -544,7 +543,6 @@
         date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString()
       });
       
-      // Limit to 25 items here
       if (scanHistory.length > 25) { scanHistory = scanHistory.slice(0, 25); }
       saveHistoryData();
     }
@@ -570,7 +568,6 @@
       renderUI();
     }
 
-    // --- WORKBENCH CONTEXT EDITING (Jobs/Groups) ---
     function loadContextToWorkbench(type, id) {
       if (labels.length > 0) {
         if(!confirm("Warning: Loading this will clear your current active list. Do you want to proceed?")) {
@@ -650,7 +647,6 @@
       }
     }
 
-    // --- JOB CARD MANAGEMENT & QR ---
     function saveToJobCard() {
       if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
       const jobName = prompt("Enter Job Number or Reference (e.g. WO-1234):");
@@ -758,7 +754,6 @@
       }
     }
 
-    // --- TEMPLATE GROUP MANAGEMENT & PRINTING ---
     function saveActiveListAsTemplate() {
       if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
       
@@ -838,7 +833,6 @@
     function saveJobsData() { localStorage.setItem('savedJobCards', JSON.stringify(savedJobs)); }
     function saveHistoryData() { localStorage.setItem('scanHistoryList', JSON.stringify(scanHistory)); }
 
-    // --- RENDER ---
     function renderUI() {
       const listContainer = document.getElementById('list');
       const actionButtons = document.getElementById('action-buttons');
