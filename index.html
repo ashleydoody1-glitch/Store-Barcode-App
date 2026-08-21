@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -302,11 +301,13 @@
 
     <!-- Scan History Section -->
     <div class="groups-section" id="history-section" style="display: none;">
-      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
-        <span>Scan History (Last 50)</span>
-        <button class="btn-action remove" onclick="clearHistory()" style="font-weight:normal; border-color:transparent;">Clear All</button>
+      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleHistoryCollapse()">
+        <span id="history-header-title">Scan History (Last 25) ▼</span>
+        <div onclick="event.stopPropagation()">
+          <button class="btn-action remove" onclick="clearHistory()" style="font-weight:normal; border-color:transparent;">Clear All</button>
+        </div>
       </div>
-      <div class="scanned-list" id="history-list">
+      <div class="scanned-list" id="history-list" style="display: none;">
         <!-- History renders here -->
       </div>
     </div>
@@ -321,6 +322,7 @@
     let savedGroups = [];
     let savedJobs = [];
     let scanHistory = [];
+    let historyCollapsed = true;
     let editingId = null;
     let contextEditing = null;
     let html5QrCode = null;
@@ -542,7 +544,7 @@
         date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString()
       });
       
-      if (scanHistory.length > 50) { scanHistory = scanHistory.slice(0, 50); }
+      if (scanHistory.length > 25) { scanHistory = scanHistory.slice(0, 25); }
       saveHistoryData();
     }
 
@@ -560,6 +562,11 @@
         saveHistoryData();
         renderUI();
       }
+    }
+
+    function toggleHistoryCollapse() {
+      historyCollapsed = !historyCollapsed;
+      renderUI();
     }
 
     // --- WORKBENCH CONTEXT EDITING (Jobs/Groups) ---
@@ -939,11 +946,16 @@
         groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Click "+ Save Current List" above to create one.</div>';
       }
 
-      // Scan History
+      // Scan History (Collapsible, Max 25)
       const historySection = document.getElementById('history-section');
       const historyList = document.getElementById('history-list');
+      const historyHeaderTitle = document.getElementById('history-header-title');
+
       if(scanHistory.length > 0) {
         historySection.style.display = 'block';
+        historyHeaderTitle.innerText = `Scan History (Last ${scanHistory.length}) ${historyCollapsed ? '▼' : '▲'}`;
+        historyList.style.display = historyCollapsed ? 'none' : 'block';
+        
         historyList.innerHTML = '';
         scanHistory.forEach(hist => {
           const safeDesc = hist.desc ? hist.desc.replace(/'/g, "&apos;").replace(/"/g, "&quot;") : '';
@@ -967,4 +979,3 @@
   </script>
 </body>
 </html>
-
