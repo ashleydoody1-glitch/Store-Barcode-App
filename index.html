@@ -544,6 +544,7 @@
         date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString()
       });
       
+      // Limit to 25 items here
       if (scanHistory.length > 25) { scanHistory = scanHistory.slice(0, 25); }
       saveHistoryData();
     }
@@ -662,7 +663,6 @@
         items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: l.oos }))
       };
 
-      // Add to TOP of list (newest first)
       savedJobs.unshift(newJob);
       saveJobsData();
       
@@ -771,7 +771,6 @@
         items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: false }))
       };
 
-      // Add to TOP of list (newest first)
       savedGroups.unshift(newGroup);
       saveGroupsData();
       renderUI();
@@ -896,7 +895,7 @@
         });
       }
 
-      // Render Job Cards (Newest First)
+      // Render Job Cards
       const jobsSection = document.getElementById('jobs-section');
       const jobsList = document.getElementById('jobs-list');
       if(savedJobs.length > 0) {
@@ -922,7 +921,7 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups (Newest First)
+      // Render Template Groups
       const groupsList = document.getElementById('groups-list');
       if(savedGroups.length > 0) {
         groupsList.innerHTML = '';
