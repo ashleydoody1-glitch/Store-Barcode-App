@@ -13,10 +13,8 @@
   <link rel="manifest" href='data:application/manifest+json,{"name":"Part Picker","short_name":"PartPicker","start_url":".","display":"standalone","background_color":"#f4f7f6","theme_color":"#0056b3","icons":[{"src":"https://api.iconify.design/lucide:box.svg?color=%230056b3","sizes":"192x192","type":"image/svg+xml"}]}'>
   <meta name="theme-color" content="#0056b3">
 
-  <!-- JsBarcode for generating A4 print sheets -->
+  <!-- JsBarcode for generating A4 print sheets and screen barcodes -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <!-- QRCode library for generating screen-scannable batch codes -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <!-- Html5-Qrcode for scanning barcodes via camera -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   
@@ -135,7 +133,7 @@
       #reader { width: 100%; max-width: 500px; background: black; }
       .btn-close-scanner { margin-top: 20px; background: var(--danger); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
 
-      /* Job/QR Viewer Modal */
+      /* Job/Barcode Carousel Viewer Modal */
       #job-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
       .job-modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
       .job-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
@@ -149,11 +147,18 @@
       .tab-content { display: none; flex-direction: column; gap: 10px; }
       .tab-content.active { display: flex; }
 
-      /* QR Screen Batch View */
-      .qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f9f9f9; border: 2px dashed #ccc; border-radius: 8px; text-align: center; }
-      #qrcode-box { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; display: inline-block; }
-      #qrcode-box img { display: block; margin: 0 auto; }
-      .qr-instructions { font-size: 13px; color: #666; line-height: 1.4; }
+      /* Screen Swipeable Barcode Carousel View */
+      .carousel-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f9f9f9; border: 2px dashed #ccc; border-radius: 8px; text-align: center; }
+      .carousel-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; }
+      .carousel-part { font-size: 22px; font-weight: bold; font-family: monospace; margin-bottom: 8px; color: var(--primary); }
+      .carousel-desc { font-size: 14px; color: #555; margin-bottom: 15px; font-weight: 500; }
+      .carousel-barcode-box { width: 100%; display: flex; justify-content: center; background: #fff; padding: 10px; }
+      .carousel-barcode-box svg { max-width: 100%; height: 90px; }
+      
+      .carousel-nav { display: flex; width: 100%; gap: 10px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+      .btn-carousel { flex: 1; background: var(--text); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+      .btn-carousel:disabled { background: #ccc; cursor: not-allowed; }
+      .carousel-counter { font-weight: bold; font-size: 14px; color: #666; white-space: nowrap; }
 
       .job-modal-item { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 4px;}
       .job-modal-item:last-child { border-bottom: none; }
@@ -186,7 +191,7 @@
     <button class="btn-close-scanner" onclick="stopScanner()">Cancel Scan</button>
   </div>
 
-  <!-- VIEWER MODAL (List OR Screen QR Batch Scan) -->
+  <!-- VIEWER MODAL (List OR Swipeable Screen Barcode Carousel) -->
   <div id="job-modal">
     <div class="job-modal-content">
       <div class="job-modal-header">
@@ -198,7 +203,7 @@
 
       <div class="job-modal-tabs">
         <button class="tab-btn active" id="tab-btn-list" onclick="switchJobTab('list')">📝 Part List</button>
-        <button class="tab-btn" id="tab-btn-qr" onclick="switchJobTab('qr')">📱 Screen Scan QR</button>
+        <button class="tab-btn" id="tab-btn-barcode" onclick="switchJobTab('barcode')">📱 Screen Barcodes</button>
       </div>
 
       <!-- Tab 1: Standard Part List View -->
@@ -206,13 +211,25 @@
         <div id="job-modal-list"></div>
       </div>
 
-      <!-- Tab 2: Screen Batch QR Code View -->
-      <div class="tab-content active" id="tab-content-qr">
-        <div class="qr-container">
-          <div id="qrcode-box"></div>
-          <div class="qr-instructions">
-            <strong>Ready for 2D Scanner!</strong><br>
-            Zap this QR code with your imager scanner at the computer to enter each unique part once.
+      <!-- Tab 2: Screen Swipeable 1D Barcode Carousel -->
+      <div class="tab-content" id="tab-content-barcode">
+        <div class="carousel-container">
+          <div class="carousel-card">
+            <div class="carousel-part" id="carousel-part-no">PART-001</div>
+            <div class="carousel-desc" id="carousel-part-desc">DESCRIPTION HERE</div>
+            <div class="carousel-barcode-box">
+              <svg id="carousel-barcode-svg"></svg>
+            </div>
+          </div>
+          
+          <div class="carousel-nav">
+            <button class="btn-carousel" id="carousel-prev" onclick="navigateCarousel(-1)">◀ Prev</button>
+            <span class="carousel-counter" id="carousel-counter">1 of 5</span>
+            <button class="btn-carousel" id="carousel-next" onclick="navigateCarousel(1)">Next ▶</button>
+          </div>
+          
+          <div style="font-size: 12px; color: #666; margin-top: 5px; text-align: center;">
+            Zap each barcode with your Zebra scanner at the computer terminal.
           </div>
         </div>
       </div>
@@ -276,7 +293,7 @@
     <!-- Main Actions -->
     <div id="action-buttons" style="display: none;">
       <button class="btn btn-job-save" onclick="saveToJobCard()">Save to Job Card</button>
-      <button class="btn btn-group-init" onclick="showActiveListQr()">📱 Generate QR Code</button>
+      <button class="btn btn-group-init" onclick="showActiveListBarcodes()">📱 Screen Barcodes</button>
       <button class="btn btn-clear" onclick="clearAllLabels()">Clear Active List</button>
     </div>
 
@@ -301,11 +318,9 @@
 
     <!-- Scan History Section -->
     <div class="groups-section" id="history-section" style="display: none;">
-      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleHistoryCollapse()">
-        <span id="history-header-title">Scan History (Last 25) ▼</span>
-        <div onclick="event.stopPropagation()">
-          <button class="btn-action remove" onclick="clearHistory()" style="font-weight:normal; border-color:transparent;">Clear All</button>
-        </div>
+      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; cursor: pointer;" onclick="toggleHistory()">
+        <span id="history-title-text">Scan History (Last 25) ▾</span>
+        <button class="btn-action remove" onclick="event.stopPropagation(); clearHistory();" style="font-weight:normal; border-color:transparent;">Clear All</button>
       </div>
       <div class="scanned-list" id="history-list" style="display: none;">
         <!-- History renders here -->
@@ -317,15 +332,19 @@
   <div id="print-layout"></div>
 
   <script>
+    // State variables
     let labels = [];
     let savedGroups = [];
     let savedJobs = [];
     let scanHistory = [];
-    let historyCollapsed = true;
     let editingId = null;
     let contextEditing = null;
     let html5QrCode = null;
-    let qrDataList = null;
+    
+    // Carousel state
+    let carouselItems = [];
+    let carouselIndex = 0;
+    let historyExpanded = false;
 
     // Initialization
     window.onload = () => {
@@ -341,18 +360,15 @@
       savedGroups = JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [];
       savedJobs = JSON.parse(localStorage.getItem('savedJobCards')) || [];
       
-      // Load scan history and strictly enforce max 25 items on startup
-      scanHistory = JSON.parse(localStorage.getItem('scanHistoryList')) || [];
-      if (scanHistory.length > 25) {
-        scanHistory = scanHistory.slice(0, 25);
-        saveHistoryData();
-      }
+      let rawHistory = JSON.parse(localStorage.getItem('scanHistoryList')) || [];
+      scanHistory = rawHistory.slice(0, 25);
       
       contextEditing = JSON.parse(localStorage.getItem('editingContext')) || null;
 
       saveData();
       saveGroupsData();
       saveJobsData();
+      saveHistoryData();
 
       document.getElementById('partNo').value = "";
       document.getElementById('desc').value = "";
@@ -371,6 +387,15 @@
       });
     };
 
+    function toggleHistory() {
+      historyExpanded = !historyExpanded;
+      const historyList = document.getElementById('history-list');
+      const titleText = document.getElementById('history-title-text');
+      historyList.style.display = historyExpanded ? 'block' : 'none';
+      titleText.innerText = `Scan History (Last 25) ${historyExpanded ? '▴' : '▾'}`;
+    }
+
+    // --- AUTO-LOOKUP DESCRIPTION LOGIC ---
     function lookupPartDescription(val) {
       const cleanPart = val.toUpperCase().replace(/[^A-Z0-9\-]/g, '').trim();
       if (!cleanPart) return;
@@ -402,6 +427,7 @@
       }
     }
 
+    // --- CAMERA SCANNER LOGIC ---
     function startScanner() {
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'flex';
@@ -440,6 +466,7 @@
       }
     }
 
+    // --- ADD or UPDATE Label (Individual Parts) ---
     function addOrUpdateLabel() {
       const partNoInput = document.getElementById('partNo');
       const descInput = document.getElementById('desc');
@@ -505,6 +532,7 @@
       document.getElementById('cancel-btn').style.display = 'none';
     }
 
+    // --- QUICK QTY ADJUSTMENTS ---
     function adjustQty(id, amount) {
       const label = labels.find(l => l.id === id);
       if (label) {
@@ -514,6 +542,7 @@
       }
     }
 
+    // --- LIST MANAGEMENT ---
     function removeLabel(id) { labels = labels.filter(label => label.id !== id); saveData(); renderUI(); }
     
     function toggleOOS(id) {
@@ -533,6 +562,7 @@
       }
     }
 
+    // --- SCAN HISTORY LOGIC ---
     function addToHistory(partNo, desc) {
       scanHistory = scanHistory.filter(h => h.partNo !== partNo);
       
@@ -563,11 +593,7 @@
       }
     }
 
-    function toggleHistoryCollapse() {
-      historyCollapsed = !historyCollapsed;
-      renderUI();
-    }
-
+    // --- WORKBENCH CONTEXT EDITING (Jobs/Groups) ---
     function loadContextToWorkbench(type, id) {
       if (labels.length > 0) {
         if(!confirm("Warning: Loading this will clear your current active list. Do you want to proceed?")) {
@@ -647,6 +673,7 @@
       }
     }
 
+    // --- JOB CARD MANAGEMENT & CAROUSEL BARCODES ---
     function saveToJobCard() {
       if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
       const jobName = prompt("Enter Job Number or Reference (e.g. WO-1234):");
@@ -675,15 +702,17 @@
       openModal(job.name, job.date, job.items, 'list');
     }
 
-    function showActiveListQr() {
+    function showActiveListBarcodes() {
       if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
-      openModal("ACTIVE LIST", new Date().toLocaleDateString(), labels, 'qr');
+      openModal("ACTIVE LIST", new Date().toLocaleDateString(), labels, 'barcode');
     }
 
     function openModal(title, dateStr, items, defaultTab = 'list') {
       document.getElementById('job-modal-title').innerText = title;
       document.getElementById('job-modal-date').innerText = dateStr;
-      qrDataList = items;
+      
+      carouselItems = items;
+      carouselIndex = 0;
       
       const listContainer = document.getElementById('job-modal-list');
       listContainer.innerHTML = '';
@@ -705,47 +734,64 @@
 
     function switchJobTab(tabName) {
       const btnList = document.getElementById('tab-btn-list');
-      const btnQr = document.getElementById('tab-btn-qr');
+      const btnBarcode = document.getElementById('tab-btn-barcode');
       const contentList = document.getElementById('tab-content-list');
-      const contentQr = document.getElementById('tab-content-qr');
+      const contentBarcode = document.getElementById('tab-content-barcode');
 
       if (tabName === 'list') {
         btnList.classList.add('active');
-        btnQr.classList.remove('active');
+        btnBarcode.classList.remove('active');
         contentList.classList.add('active');
-        contentQr.classList.remove('active');
+        contentBarcode.classList.remove('active');
       } else {
         btnList.classList.remove('active');
-        btnQr.classList.add('active');
+        btnBarcode.classList.add('active');
         contentList.classList.remove('active');
-        contentQr.classList.add('active');
+        contentBarcode.classList.add('active');
 
-        generateBatchQrCode();
+        renderCarouselItem();
       }
     }
 
-    function generateBatchQrCode() {
-      const qrBox = document.getElementById('qrcode-box');
-      qrBox.innerHTML = ''; 
+    function navigateCarousel(direction) {
+      carouselIndex += direction;
+      if (carouselIndex < 0) carouselIndex = 0;
+      if (carouselIndex >= carouselItems.length) carouselIndex = carouselItems.length - 1;
+      renderCarouselItem();
+    }
 
-      if (!qrDataList || qrDataList.length === 0) return;
+    function renderCarouselItem() {
+      if (!carouselItems || carouselItems.length === 0) return;
 
-      const uniquePartsArray = qrDataList.map(i => i.partNo);
-      const batchString = uniquePartsArray.join('\n');
+      const currentItem = carouselItems[carouselIndex];
+      document.getElementById('carousel-part-no').innerText = currentItem.partNo;
+      document.getElementById('carousel-part-desc').innerText = (currentItem.oos ? '[ON ORDER] ' : '') + (currentItem.desc || 'NO DESCRIPTION');
+      document.getElementById('carousel-counter').innerText = `${carouselIndex + 1} of ${carouselItems.length}`;
 
-      new QRCode(qrBox, {
-        text: batchString,
-        width: 220,
-        height: 220,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-      });
+      document.getElementById('carousel-prev').disabled = (carouselIndex === 0);
+      document.getElementById('carousel-next').disabled = (carouselIndex === carouselItems.length - 1);
+
+      // Generate Code 128 1D Barcode on screen for the Zebra laser scanner
+      try {
+        JsBarcode("#carousel-barcode-svg", currentItem.partNo, {
+          format: "CODE128",
+          lineColor: "#000",
+          width: 2.5,
+          height: 80,
+          displayValue: true,
+          fontSize: 16,
+          fontOptions: "bold",
+          margin: 5
+        });
+      } catch(e) {
+        console.error("Barcode generation error:", e);
+      }
     }
 
     function closeJobModal() { 
       document.getElementById('job-modal').style.display = 'none'; 
-      qrDataList = null;
+      carouselItems = [];
+      carouselIndex = 0;
     }
 
     function deleteJob(id) {
@@ -754,6 +800,7 @@
       }
     }
 
+    // --- TEMPLATE GROUP MANAGEMENT & PRINTING ---
     function saveActiveListAsTemplate() {
       if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
       
@@ -833,6 +880,7 @@
     function saveJobsData() { localStorage.setItem('savedJobCards', JSON.stringify(savedJobs)); }
     function saveHistoryData() { localStorage.setItem('scanHistoryList', JSON.stringify(scanHistory)); }
 
+    // --- RENDER ---
     function renderUI() {
       const listContainer = document.getElementById('list');
       const actionButtons = document.getElementById('action-buttons');
@@ -889,7 +937,7 @@
         });
       }
 
-      // Render Job Cards
+      // Render Job Cards (Newest First)
       const jobsSection = document.getElementById('jobs-section');
       const jobsList = document.getElementById('jobs-list');
       if(savedJobs.length > 0) {
@@ -915,7 +963,7 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups
+      // Render Template Groups (Newest First)
       const groupsList = document.getElementById('groups-list');
       if(savedGroups.length > 0) {
         groupsList.innerHTML = '';
@@ -939,16 +987,11 @@
         groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Click "+ Save Current List" above to create one.</div>';
       }
 
-      // Scan History (Collapsible, Max 25)
+      // Scan History
       const historySection = document.getElementById('history-section');
       const historyList = document.getElementById('history-list');
-      const historyHeaderTitle = document.getElementById('history-header-title');
-
       if(scanHistory.length > 0) {
         historySection.style.display = 'block';
-        historyHeaderTitle.innerText = `Scan History (Last ${scanHistory.length}) ${historyCollapsed ? '▼' : '▲'}`;
-        historyList.style.display = historyCollapsed ? 'none' : 'block';
-        
         historyList.innerHTML = '';
         scanHistory.forEach(hist => {
           const safeDesc = hist.desc ? hist.desc.replace(/'/g, "&apos;").replace(/"/g, "&quot;") : '';
