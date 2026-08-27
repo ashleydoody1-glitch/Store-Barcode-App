@@ -123,15 +123,16 @@
       
       .group-actions { display: flex; gap: 6px; }
       .btn-load { background: var(--primary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-barcode-group { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
       .btn-view { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
       .btn-print-group { background: var(--success); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
       .btn-edit-group { background: var(--secondary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
       .btn-delete-group { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;}
 
       /* Fullscreen Scanner Modal */
-      #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+      #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
       #reader { width: 100%; max-width: 500px; background: black; }
-      .btn-close-scanner { margin-top: 20px; background: var(--danger); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+      .btn-close-scanner { margin-top: 20px; background: var(--danger); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; max-width: 500px; }
 
       /* Job/Barcode Carousel Viewer Modal */
       #job-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
@@ -434,7 +435,7 @@
 
       html5QrCode = new Html5Qrcode("reader");
       const config = { 
-        fps: 10, 
+        fps: 15, 
         qrbox: { width: 300, height: 150 },
         aspectRatio: 1.0,
         formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ]
@@ -707,6 +708,12 @@
       openModal("ACTIVE LIST", new Date().toLocaleDateString(), labels, 'barcode');
     }
 
+    function viewGroupBarcodes(groupId) {
+      const group = savedGroups.find(g => g.id === groupId);
+      if(!group) return;
+      openModal(group.name, "TEMPLATE GROUP", group.items, 'barcode');
+    }
+
     function openModal(title, dateStr, items, defaultTab = 'list') {
       document.getElementById('job-modal-title').innerText = title;
       document.getElementById('job-modal-date').innerText = dateStr;
@@ -771,7 +778,6 @@
       document.getElementById('carousel-prev').disabled = (carouselIndex === 0);
       document.getElementById('carousel-next').disabled = (carouselIndex === carouselItems.length - 1);
 
-      // Generate Code 128 1D Barcode on screen for the Zebra laser scanner
       try {
         JsBarcode("#carousel-barcode-svg", currentItem.partNo, {
           format: "CODE128",
@@ -817,21 +823,6 @@
       saveGroupsData();
       renderUI();
       alert(`Template "${newGroup.name}" saved successfully!`);
-    }
-
-    function loadGroup(groupId) {
-      const group = savedGroups.find(g => g.id === groupId);
-      if(!group) return;
-      group.items.forEach(item => {
-        const existing = labels.find(l => l.partNo === item.partNo);
-        const incomingQty = parseInt(item.qty) || 1;
-        if (existing) {
-          existing.qty += incomingQty;
-        } else {
-          labels.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), partNo: item.partNo, desc: item.desc, qty: incomingQty, oos: false });
-        }
-      });
-      saveData(); renderUI(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function deleteGroup(groupId) {
@@ -963,7 +954,7 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups (Newest First)
+      // Render Template Groups (Newest First - with Barcodes button)
       const groupsList = document.getElementById('groups-list');
       if(savedGroups.length > 0) {
         groupsList.innerHTML = '';
@@ -975,7 +966,7 @@
                 <div><span class="group-title">${group.name}</span> <span class="group-count">${totalGroupQty} items</span></div>
               </div>
               <div class="group-actions">
-                <button class="btn-load" onclick="loadGroup('${group.id}')">Load</button>
+                <button class="btn-barcode-group" onclick="viewGroupBarcodes('${group.id}')">Barcodes</button>
                 <button class="btn-print-group" onclick="printGroup('${group.id}')">Print</button>
                 <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
                 <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
