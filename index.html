@@ -56,7 +56,7 @@
       .input-row-split > div { flex-grow: 1; }
       .input-row-split > div.qty-container { flex-grow: 0; width: 90px; }
 
-      input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; transition: border-color 0.2s; }
+      input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; transition: border-color 0.2s; background: #fff; }
       input[type="text"] { text-transform: uppercase; }
       input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: var(--primary); }
       
@@ -134,12 +134,21 @@
       #reader { width: 100%; max-width: 500px; background: black; }
       .btn-close-scanner { margin-top: 20px; background: var(--danger); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; max-width: 500px; }
 
+      /* In-App Custom Dialog Modal */
+      #job-prompt-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+      .prompt-card { background: white; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+      .prompt-title { font-size: 18px; font-weight: bold; color: var(--primary); margin: 0; }
+      .prompt-group { display: flex; flex-direction: column; gap: 6px; }
+      .prompt-buttons { display: flex; gap: 10px; margin-top: 5px; }
+      .btn-prompt-save { flex: 1; background: var(--success); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
+      .btn-prompt-cancel { flex: 1; background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
+
       /* Job/Barcode Carousel Viewer Modal */
       #job-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
       .job-modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
       .job-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
-      .job-modal-title { font-size: 22px; font-weight: bold; color: var(--info); margin: 0; }
-      .job-modal-date { font-size: 13px; color: #888; }
+      .job-modal-title { font-size: 20px; font-weight: bold; color: var(--info); margin: 0; word-break: break-word; }
+      .job-modal-date { font-size: 13px; color: #888; white-space: nowrap; }
       
       .job-modal-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
       .tab-btn { flex: 1; padding: 10px; background: #eee; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
@@ -190,6 +199,28 @@
   <div id="scanner-modal">
     <div id="reader"></div>
     <button class="btn-close-scanner" onclick="stopScanner()">Cancel Scan</button>
+  </div>
+
+  <!-- IN-APP JOB CARD PROMPT MODAL -->
+  <div id="job-prompt-modal">
+    <div class="prompt-card">
+      <h3 class="prompt-title" id="prompt-modal-title">Save Job Card</h3>
+      
+      <div class="prompt-group">
+        <label for="modal-job-no">Job / Bus Number *</label>
+        <input type="text" id="modal-job-no" placeholder="e.g. 5013">
+      </div>
+
+      <div class="prompt-group">
+        <label for="modal-job-desc">Job Description (Optional)</label>
+        <input type="text" id="modal-job-desc" placeholder="e.g. COMPRESSOR">
+      </div>
+
+      <div class="prompt-buttons">
+        <button class="btn-prompt-cancel" onclick="closeJobPromptModal()">Cancel</button>
+        <button class="btn-prompt-save" onclick="submitJobPromptModal()">Save</button>
+      </div>
+    </div>
   </div>
 
   <!-- VIEWER MODAL (List OR Swipeable Screen Barcode Carousel) -->
@@ -277,7 +308,7 @@
     <div id="editing-banner" class="editing-banner" style="display: none;">
       <div class="editing-banner-header">
         <span class="editing-banner-title" id="editing-banner-text">Editing Job/Template...</span>
-        <button class="btn-banner-rename" onclick="renameContext()">Rename</button>
+        <button class="btn-banner-rename" onclick="openJobPromptModal('rename')">Rename</button>
       </div>
       <div style="display:flex; gap: 8px;">
         <button class="btn-banner-cancel" onclick="cancelContextEdit()">Cancel Edits</button>
@@ -293,7 +324,7 @@
 
     <!-- Main Actions -->
     <div id="action-buttons" style="display: none;">
-      <button class="btn btn-job-save" onclick="saveToJobCard()">Save to Job Card</button>
+      <button class="btn btn-job-save" onclick="openJobPromptModal('save')">Save to Job Card</button>
       <button class="btn btn-group-init" onclick="showActiveListBarcodes()">📱 Screen Barcodes</button>
       <button class="btn btn-clear" onclick="clearAllLabels()">Clear Active List</button>
     </div>
@@ -341,6 +372,7 @@
     let editingId = null;
     let contextEditing = null;
     let html5QrCode = null;
+    let promptMode = 'save'; // 'save' or 'rename'
     
     // Carousel state
     let carouselItems = [];
@@ -428,7 +460,7 @@
       }
     }
 
-    // --- CAMERA SCANNER LOGIC ---
+    // --- CAMERA SCANNER LOGIC (Fixed Zoom / Unwanted Crop) ---
     function startScanner() {
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'flex';
@@ -437,11 +469,17 @@
       const config = { 
         fps: 15, 
         qrbox: { width: 300, height: 150 },
-        aspectRatio: 1.0,
         formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ]
       };
 
-      html5QrCode.start({ facingMode: "environment" }, config, 
+      // Explicit video constraints without forced square aspectRatio to prevent mobile camera zoom/crop issues
+      const videoConstraints = {
+        facingMode: "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      };
+
+      html5QrCode.start(videoConstraints, config, 
         (decodedText) => {
           stopScanner(); 
           const cleanText = decodedText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
@@ -608,7 +646,12 @@
 
       if (!sourceItem) return;
 
-      contextEditing = { type: type, id: id, name: sourceItem.name };
+      contextEditing = { 
+        type: type, 
+        id: id, 
+        name: sourceItem.jobNo || sourceItem.name, 
+        description: sourceItem.description || '' 
+      };
       localStorage.setItem('editingContext', JSON.stringify(contextEditing));
 
       labels = sourceItem.items.map(item => ({
@@ -624,14 +667,73 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function renameContext() {
-      if (!contextEditing) return;
-      const typeName = contextEditing.type === 'job' ? 'Job Number' : 'Template Name';
-      const newName = prompt(`Enter new ${typeName}:`, contextEditing.name);
+    // --- IN-APP MODAL PROMPT LOGIC ---
+    function openJobPromptModal(mode) {
+      if (mode === 'save' && labels.length === 0) {
+        alert("Your active list is empty. Scan some parts first!");
+        return;
+      }
       
-      if (newName && newName.trim() !== "") {
-        contextEditing.name = newName.trim().toUpperCase();
+      promptMode = mode;
+      const modal = document.getElementById('job-prompt-modal');
+      const titleEl = document.getElementById('prompt-modal-title');
+      const jobNoInput = document.getElementById('modal-job-no');
+      const jobDescInput = document.getElementById('modal-job-desc');
+
+      if (mode === 'rename' && contextEditing) {
+        titleEl.innerText = "Edit Job Details";
+        jobNoInput.value = contextEditing.name || "";
+        jobDescInput.value = contextEditing.description || "";
+      } else {
+        titleEl.innerText = "Save Job Card";
+        jobNoInput.value = "";
+        jobDescInput.value = "";
+      }
+
+      modal.style.display = 'flex';
+      jobNoInput.focus();
+    }
+
+    function closeJobPromptModal() {
+      document.getElementById('job-prompt-modal').style.display = 'none';
+    }
+
+    function submitJobPromptModal() {
+      const jobNoInput = document.getElementById('modal-job-no');
+      const jobDescInput = document.getElementById('modal-job-desc');
+      
+      const jobNo = jobNoInput.value.trim().toUpperCase();
+      const jobDesc = jobDescInput.value.trim().toUpperCase();
+
+      if (!jobNo) {
+        alert("Please enter a Job / Bus Number.");
+        jobNoInput.focus();
+        return;
+      }
+
+      closeJobPromptModal();
+
+      if (promptMode === 'rename' && contextEditing) {
+        contextEditing.name = jobNo;
+        contextEditing.description = jobDesc;
         localStorage.setItem('editingContext', JSON.stringify(contextEditing));
+        renderUI();
+      } else {
+        const newJob = {
+          id: "job_" + Date.now().toString(),
+          jobNo: jobNo,
+          description: jobDesc,
+          date: new Date().toLocaleDateString(),
+          items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: l.oos }))
+        };
+
+        savedJobs.unshift(newJob);
+        saveJobsData();
+        
+        if(confirm(`Job "${newJob.jobNo}" saved! Clear the active list to start your next job?`)) {
+          labels = [];
+          saveData();
+        }
         renderUI();
       }
     }
@@ -647,11 +749,18 @@
 
       if (contextEditing.type === 'job') {
         const idx = savedJobs.findIndex(j => j.id === contextEditing.id);
-        if(idx > -1) { savedJobs[idx].items = updatedItems; savedJobs[idx].name = contextEditing.name; }
+        if(idx > -1) { 
+          savedJobs[idx].items = updatedItems; 
+          savedJobs[idx].jobNo = contextEditing.name; 
+          savedJobs[idx].description = contextEditing.description; 
+        }
         saveJobsData();
       } else if (contextEditing.type === 'group') {
         const idx = savedGroups.findIndex(g => g.id === contextEditing.id);
-        if(idx > -1) { savedGroups[idx].items = updatedItems; savedGroups[idx].name = contextEditing.name; }
+        if(idx > -1) { 
+          savedGroups[idx].items = updatedItems; 
+          savedGroups[idx].name = contextEditing.name; 
+        }
         saveGroupsData();
       }
 
@@ -675,32 +784,12 @@
     }
 
     // --- JOB CARD MANAGEMENT & CAROUSEL BARCODES ---
-    function saveToJobCard() {
-      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
-      const jobName = prompt("Enter Job Number or Reference (e.g. WO-1234):");
-      if(!jobName || jobName.trim() === "") return;
-
-      const newJob = {
-        id: "job_" + Date.now().toString(),
-        name: jobName.trim().toUpperCase(),
-        date: new Date().toLocaleDateString(),
-        items: labels.map(l => ({ partNo: l.partNo, desc: l.desc, qty: l.qty || 1, oos: l.oos }))
-      };
-
-      savedJobs.unshift(newJob);
-      saveJobsData();
-      
-      if(confirm(`Job "${newJob.name}" saved! Clear the active list to start your next job?`)) {
-        labels = [];
-        saveData();
-      }
-      renderUI();
-    }
-
     function viewJob(id) {
       const job = savedJobs.find(j => j.id === id);
       if(!job) return;
-      openModal(job.name, job.date, job.items, 'list');
+      const jobNoStr = job.jobNo || job.name || 'JOB';
+      const title = job.description ? `${jobNoStr} - ${job.description}` : jobNoStr;
+      openModal(title, job.date, job.items, 'list');
     }
 
     function showActiveListBarcodes() {
@@ -810,8 +899,9 @@
     function saveActiveListAsTemplate() {
       if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
       
-      const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):");
-      if(!groupName || groupName.trim() === "") return;
+      const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):", "");
+      if(groupName === null) return;
+      if(groupName.trim() === "") return;
 
       const newGroup = {
         id: "group_" + Date.now().toString(),
@@ -882,7 +972,8 @@
       if (contextEditing) {
         banner.style.display = 'flex';
         const isJob = (contextEditing.type === 'job');
-        document.getElementById('editing-banner-text').innerText = `WORKBENCH: Editing ${isJob ? 'Job' : 'Template'} "${contextEditing.name}"`;
+        const bannerTitleStr = (isJob && contextEditing.description) ? `${contextEditing.name} - ${contextEditing.description}` : contextEditing.name;
+        document.getElementById('editing-banner-text').innerText = `WORKBENCH: Editing ${isJob ? 'Job' : 'Template'} "${bannerTitleStr}"`;
       } else {
         banner.style.display = 'none';
       }
@@ -936,10 +1027,16 @@
         jobsList.innerHTML = '';
         savedJobs.forEach(job => {
           const totalJobQty = job.items.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
+          const jobNoStr = job.jobNo || job.name || 'JOB';
+          const fullJobTitle = job.description ? `${jobNoStr} - ${job.description}` : jobNoStr;
+          
           jobsList.innerHTML += `
             <div class="group-card job-card">
               <div class="group-header">
-                <div><span class="group-title">${job.name}</span> <span class="group-count" style="margin-left: 5px;">${totalJobQty} items</span></div>
+                <div>
+                  <span class="group-title">${fullJobTitle}</span> 
+                  <span class="group-count" style="margin-left: 5px;">${totalJobQty} items</span>
+                </div>
                 <div style="font-size:12px; color:#888;">${job.date}</div>
               </div>
               <div class="group-actions">
