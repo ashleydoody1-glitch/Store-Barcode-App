@@ -176,13 +176,32 @@
       .job-modal-desc { font-size: 13px; color: #555; display: flex; align-items: center; }
       .btn-close-modal { background: var(--text); color: white; padding: 14px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; font-weight: bold; cursor: pointer; font-size: 16px;}
 
+      /* In-App Toast Notification */
+      #toast-notification {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e293b;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 20000;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        text-align: center;
+        max-width: 90%;
+        font-size: 15px;
+      }
+
       #print-layout { display: none; }
     }
 
     /* --- PRINT STYLES (A4 Landscape) --- */
     @media print {
       @page { size: A4 landscape; margin: 10mm; }
-      .app-container, #scanner-modal, #job-modal { display: none !important; }
+      .app-container, #scanner-modal, #job-modal, #toast-notification { display: none !important; }
       #print-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10mm; width: 100%; }
       body { background: white; color: black; }
       .print-card { border: 1px solid #000; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 160px; box-sizing: border-box; page-break-inside: avoid; }
@@ -194,6 +213,9 @@
   </style>
 </head>
 <body>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-notification">Notification message</div>
 
   <!-- CAMERA SCANNER MODAL -->
   <div id="scanner-modal">
@@ -379,6 +401,16 @@
     let carouselIndex = 0;
     let historyExpanded = false;
 
+    // Toast Notification helper (replaces browser alerts)
+    function showNotification(msg) {
+      const toast = document.getElementById('toast-notification');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
     // Initialization
     window.onload = () => {
       const rawLabels = JSON.parse(localStorage.getItem('savedBarcodeLabels')) || [];
@@ -460,7 +492,7 @@
       }
     }
 
-    // --- CAMERA SCANNER LOGIC (Fixed Zoom / Unwanted Crop) ---
+    // --- CAMERA SCANNER LOGIC (Robust Mobile Constraints) ---
     function startScanner() {
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'flex';
@@ -472,14 +504,8 @@
         formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ]
       };
 
-      // Explicit video constraints without forced square aspectRatio to prevent mobile camera zoom/crop issues
-      const videoConstraints = {
-        facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      };
-
-      html5QrCode.start(videoConstraints, config, 
+      // Safely request back camera without throwing OverconstrainedError on mobile browsers
+      html5QrCode.start({ facingMode: "environment" }, config, 
         (decodedText) => {
           stopScanner(); 
           const cleanText = decodedText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
@@ -492,7 +518,8 @@
         },
         (errorMessage) => {}
       ).catch((err) => {
-        alert("Unable to access camera. Please ensure you have granted camera permissions.");
+        console.error("Camera error:", err);
+        showNotification("Unable to access camera. Please allow camera permissions in browser settings.");
         stopScanner();
       });
     }
@@ -515,8 +542,8 @@
       const desc = descInput.value.trim().toUpperCase();
       const qty = parseInt(qtyInput.value) || 1;
 
-      if(!partNo) { alert("Please enter a valid part number."); partNoInput.focus(); return; }
-      if(!desc) { alert("Please enter an item description."); descInput.focus(); return; }
+      if(!partNo) { showNotification("Please enter a valid part number."); partNoInput.focus(); return; }
+      if(!desc) { showNotification("Please enter an item description."); descInput.focus(); return; }
 
       if (editingId) {
         const index = labels.findIndex(l => l.id === editingId);
@@ -670,7 +697,7 @@
     // --- IN-APP MODAL PROMPT LOGIC ---
     function openJobPromptModal(mode) {
       if (mode === 'save' && labels.length === 0) {
-        alert("Your active list is empty. Scan some parts first!");
+        showNotification("Your active list is empty. Scan some parts first!");
         return;
       }
       
@@ -706,7 +733,7 @@
       const jobDesc = jobDescInput.value.trim().toUpperCase();
 
       if (!jobNo) {
-        alert("Please enter a Job / Bus Number.");
+        showNotification("Please enter a Job / Bus Number.");
         jobNoInput.focus();
         return;
       }
@@ -741,7 +768,7 @@
     function saveContextChanges() {
       if (!contextEditing) return;
       if (labels.length === 0) {
-        alert("The list is empty. If you want to delete this entirely, please use the Delete button below.");
+        showNotification("The list is empty. If you want to delete this entirely, please use the Delete button below.");
         return;
       }
 
@@ -764,7 +791,7 @@
         saveGroupsData();
       }
 
-      alert(`${contextEditing.type === 'job' ? 'Job Card' : 'Template'} "${contextEditing.name}" updated successfully!`);
+      showNotification(`${contextEditing.type === 'job' ? 'Job Card' : 'Template'} "${contextEditing.name}" updated successfully!`);
       
       contextEditing = null;
       localStorage.removeItem('editingContext');
@@ -793,7 +820,7 @@
     }
 
     function showActiveListBarcodes() {
-      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
+      if(labels.length === 0) { showNotification("Your active list is empty. Scan some parts first!"); return; }
       openModal("ACTIVE LIST", new Date().toLocaleDateString(), labels, 'barcode');
     }
 
@@ -897,7 +924,7 @@
 
     // --- TEMPLATE GROUP MANAGEMENT & PRINTING ---
     function saveActiveListAsTemplate() {
-      if(labels.length === 0) { alert("Your active list is empty. Scan some parts first!"); return; }
+      if(labels.length === 0) { showNotification("Your active list is empty. Scan some parts first!"); return; }
       
       const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):", "");
       if(groupName === null) return;
@@ -912,7 +939,7 @@
       savedGroups.unshift(newGroup);
       saveGroupsData();
       renderUI();
-      alert(`Template "${newGroup.name}" saved successfully!`);
+      showNotification(`Template "${newGroup.name}" saved successfully!`);
     }
 
     function deleteGroup(groupId) {
