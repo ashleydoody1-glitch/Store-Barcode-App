@@ -44,8 +44,11 @@
     @media screen {
       .app-container { max-width: 600px; margin: 0 auto; padding: 20px; }
       
-      h1 { font-size: 24px; text-align: center; margin-bottom: 24px; color: var(--primary); }
+      h1 { font-size: 24px; text-align: center; margin-bottom: 12px; color: var(--primary); }
       
+      .btn-guide-top { background-color: var(--secondary); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+      .btn-guide-top:active { opacity: 0.8; }
+
       .input-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; transition: all 0.3s ease; }
       .input-card.editing { border: 2px solid var(--warning); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); }
       
@@ -143,8 +146,8 @@
       .btn-prompt-save { flex: 1; background: var(--success); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
       .btn-prompt-cancel { flex: 1; background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
 
-      /* Job/Barcode Carousel Viewer Modal */
-      #job-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+      /* Job/Barcode Carousel & User Guide Modal Viewer */
+      #job-modal, #guide-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
       .job-modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
       .job-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
       .job-modal-title { font-size: 20px; font-weight: bold; color: var(--info); margin: 0; word-break: break-word; }
@@ -156,6 +159,12 @@
 
       .tab-content { display: none; flex-direction: column; gap: 10px; }
       .tab-content.active { display: flex; }
+
+      /* User Guide Modal Formatting */
+      .guide-body { font-size: 14px; line-height: 1.5; color: #333; display: flex; flex-direction: column; gap: 14px; }
+      .guide-body h3 { color: var(--primary); margin: 10px 0 4px 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+      .guide-body ul { margin: 0; padding-left: 20px; }
+      .guide-body li { margin-bottom: 6px; }
 
       /* Screen Swipeable Barcode Carousel View */
       .carousel-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f9f9f9; border: 2px dashed #ccc; border-radius: 8px; text-align: center; }
@@ -201,7 +210,7 @@
     /* --- PRINT STYLES (A4 Landscape) --- */
     @media print {
       @page { size: A4 landscape; margin: 10mm; }
-      .app-container, #scanner-modal, #job-modal, #toast-notification { display: none !important; }
+      .app-container, #scanner-modal, #job-modal, #guide-modal, #toast-notification { display: none !important; }
       #print-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10mm; width: 100%; }
       body { background: white; color: black; }
       .print-card { border: 1px solid #000; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 160px; box-sizing: border-box; page-break-inside: avoid; }
@@ -242,6 +251,49 @@
         <button class="btn-prompt-cancel" onclick="closeJobPromptModal()">Cancel</button>
         <button class="btn-prompt-save" onclick="submitJobPromptModal()">Save</button>
       </div>
+    </div>
+  </div>
+
+  <!-- EMBEDDED USER GUIDE MODAL -->
+  <div id="guide-modal">
+    <div class="job-modal-content">
+      <div class="job-modal-header">
+        <h2 class="job-modal-title">📖 Part Picker User Guide</h2>
+      </div>
+
+      <div class="guide-body">
+        <div>Welcome to <strong>Part Picker</strong>, your mobile-first inventory and job card companion. This guide explains how to scan, manage job cards, print templates, and zap barcodes at your computer terminal.</div>
+
+        <h3>1. Getting Started</h3>
+        <ul>
+          <li><strong>Accessing the App:</strong> Open the app link on your mobile phone or tablet.</li>
+          <li><strong>Camera Permissions:</strong> Tap the <strong>📷 Scan</strong> button and tap <strong>Allow</strong> when prompted for camera access.</li>
+        </ul>
+
+        <h3>2. Adding Parts</h3>
+        <ul>
+          <li><strong>Camera Scanning:</strong> Tap <strong>📷 Scan</strong>, point your camera at barcode. It will scan instantly, vibrate, and jump straight to the description field.</li>
+          <li><strong>Manual Entry:</strong> Type the part number. If previously scanned, the description will auto-fill! Set quantity and tap <strong>Add to List</strong>.</li>
+        </ul>
+
+        <h3>3. Active List & Job Cards</h3>
+        <ul>
+          <li><strong>Quantities & OOS:</strong> Use <code>+</code> / <code>-</code> to update quantities, or tap <strong>On Order</strong> to flag out-of-stock items.</li>
+          <li><strong>Saving Jobs:</strong> Tap <strong>Save to Job Card</strong>, enter your Job/Bus Number and optional Job Description.</li>
+        </ul>
+
+        <h3>4. Templates & A4 Print Sheets</h3>
+        <ul>
+          <li>Build a standard parts kit, tap <strong>+ Save Current List</strong> under Template Groups, and hit <strong>Print</strong> to generate A4 landscape sheets with physical barcode cards.</li>
+        </ul>
+
+        <h3>5. Terminal Integration (Screen Barcodes)</h3>
+        <ul>
+          <li>Open any saved Job Card or Template, tap <strong>📱 Screen Barcodes</strong>, and zap each large barcode directly off your phone screen using your compatible scanner.</li>
+        </ul>
+      </div>
+
+      <button class="btn-close-modal" onclick="closeGuideModal()">Close Guide</button>
     </div>
   </div>
 
@@ -295,6 +347,9 @@
   <!-- MOBILE UI -->
   <div class="app-container">
     <h1>Part Picker</h1>
+    
+    <!-- EMBEDDED USER GUIDE BUTTON -->
+    <button class="btn-guide-top" onclick="openGuideModal()">📖 User Guide & Instructions</button>
     
     <div class="input-card" id="input-card">
       <label for="partNo">Part Number</label>
@@ -401,7 +456,7 @@
     let carouselIndex = 0;
     let historyExpanded = false;
 
-    // Toast Notification helper (replaces browser alerts)
+    // Toast Notification helper
     function showNotification(msg) {
       const toast = document.getElementById('toast-notification');
       toast.innerText = msg;
@@ -460,6 +515,15 @@
       titleText.innerText = `Scan History (Last 25) ${historyExpanded ? '▴' : '▾'}`;
     }
 
+    // --- USER GUIDE MODAL CONTROLS ---
+    function openGuideModal() {
+      document.getElementById('guide-modal').style.display = 'flex';
+    }
+
+    function closeGuideModal() {
+      document.getElementById('guide-modal').style.display = 'none';
+    }
+
     // --- AUTO-LOOKUP DESCRIPTION LOGIC ---
     function lookupPartDescription(val) {
       const cleanPart = val.toUpperCase().replace(/[^A-Z0-9\-]/g, '').trim();
@@ -492,7 +556,7 @@
       }
     }
 
-    // --- CAMERA SCANNER LOGIC (Robust Mobile Constraints) ---
+    // --- CAMERA SCANNER LOGIC (Robust GitHub Pages Constraints) ---
     function startScanner() {
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'flex';
@@ -504,7 +568,6 @@
         formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ]
       };
 
-      // Safely request back camera without throwing OverconstrainedError on mobile browsers
       html5QrCode.start({ facingMode: "environment" }, config, 
         (decodedText) => {
           stopScanner(); 
@@ -745,6 +808,7 @@
         contextEditing.description = jobDesc;
         localStorage.setItem('editingContext', JSON.stringify(contextEditing));
         renderUI();
+        showNotification(`Job details updated successfully!`);
       } else {
         const newJob = {
           id: "job_" + Date.now().toString(),
@@ -756,6 +820,7 @@
 
         savedJobs.unshift(newJob);
         saveJobsData();
+        showNotification(`Job "${newJob.jobNo}" saved successfully!`);
         
         if(confirm(`Job "${newJob.jobNo}" saved! Clear the active list to start your next job?`)) {
           labels = [];
@@ -768,7 +833,7 @@
     function saveContextChanges() {
       if (!contextEditing) return;
       if (labels.length === 0) {
-        showNotification("The list is empty. If you want to delete this entirely, please use the Delete button below.");
+        showNotification("The list is empty. If you want to delete this entirely, please use the Delete button.");
         return;
       }
 
@@ -1130,3 +1195,4 @@
   </script>
 </body>
 </html>
+
