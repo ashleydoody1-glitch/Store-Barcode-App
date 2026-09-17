@@ -270,9 +270,9 @@
           <li><strong>Camera Permissions:</strong> Tap the <strong>📷 Scan</strong> button and tap <strong>Allow</strong> when prompted for camera access.</li>
         </ul>
 
-        <h3>2. Adding Parts</h3>
+        <h3>2. Adding Parts (Orange & White Labels)</h3>
         <ul>
-          <li><strong>Camera Scanning:</strong> Tap <strong>📷 Scan</strong>, point your camera at barcode. It will scan instantly, vibrate, and jump straight to the description field.</li>
+          <li><strong>Camera Scanning:</strong> Tap <strong>📷 Scan</strong>, point your camera at any 1D barcode (including colored shelf labels). The enhanced native detector handles low-contrast stickers instantly.</li>
           <li><strong>Manual Entry:</strong> Type the part number. If previously scanned, the description will auto-fill! Set quantity and tap <strong>Add to List</strong>.</li>
         </ul>
 
@@ -289,7 +289,7 @@
 
         <h3>5. Terminal Integration (Screen Barcodes)</h3>
         <ul>
-          <li>Open any saved Job Card or Template, tap <strong>📱 Screen Barcodes</strong>, and zap each large barcode directly off your phone screen using your compatible scanner.</li>
+          <li>Open any saved Job Card or Template, tap <strong>📱 Screen Barcodes</strong>, and zap each large barcode directly off your phone screen using your wireless Zebra scanner (configured with an Enter suffix).</li>
         </ul>
       </div>
 
@@ -556,16 +556,24 @@
       }
     }
 
-    // --- CAMERA SCANNER LOGIC (Robust GitHub Pages Constraints) ---
+    // --- STREAMING_CHUNK:Configuring camera scanner with native BarcodeDetector for orange/colored labels... ---
     function startScanner() {
       const modal = document.getElementById('scanner-modal');
       modal.style.display = 'flex';
 
       html5QrCode = new Html5Qrcode("reader");
       const config = { 
-        fps: 15, 
-        qrbox: { width: 300, height: 150 },
-        formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.CODE_39 ]
+        fps: 20, 
+        qrbox: { width: 320, height: 160 },
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        },
+        formatsToSupport: [ 
+          Html5QrcodeSupportedFormats.CODE_128, 
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.UPC_A
+        ]
       };
 
       html5QrCode.start({ facingMode: "environment" }, config, 
@@ -595,7 +603,7 @@
       }
     }
 
-    // --- ADD or UPDATE Label (Individual Parts) ---
+    // --- STREAMING_CHUNK:Implementing part list management and form handlers... ---
     function addOrUpdateLabel() {
       const partNoInput = document.getElementById('partNo');
       const descInput = document.getElementById('desc');
@@ -661,7 +669,6 @@
       document.getElementById('cancel-btn').style.display = 'none';
     }
 
-    // --- QUICK QTY ADJUSTMENTS ---
     function adjustQty(id, amount) {
       const label = labels.find(l => l.id === id);
       if (label) {
@@ -671,7 +678,6 @@
       }
     }
 
-    // --- LIST MANAGEMENT ---
     function removeLabel(id) { labels = labels.filter(label => label.id !== id); saveData(); renderUI(); }
     
     function toggleOOS(id) {
@@ -691,7 +697,6 @@
       }
     }
 
-    // --- SCAN HISTORY LOGIC ---
     function addToHistory(partNo, desc) {
       scanHistory = scanHistory.filter(h => h.partNo !== partNo);
       
@@ -722,7 +727,7 @@
       }
     }
 
-    // --- WORKBENCH CONTEXT EDITING (Jobs/Groups) ---
+    // --- STREAMING_CHUNK:Implementing workbench context and job prompt handlers... ---
     function loadContextToWorkbench(type, id) {
       if (labels.length > 0) {
         if(!confirm("Warning: Loading this will clear your current active list. Do you want to proceed?")) {
@@ -757,7 +762,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // --- IN-APP MODAL PROMPT LOGIC ---
     function openJobPromptModal(mode) {
       if (mode === 'save' && labels.length === 0) {
         showNotification("Your active list is empty. Scan some parts first!");
@@ -875,7 +879,7 @@
       }
     }
 
-    // --- JOB CARD MANAGEMENT & CAROUSEL BARCODES ---
+    // --- STREAMING_CHUNK:Implementing screen carousel viewer and rendering functions... ---
     function viewJob(id) {
       const job = savedJobs.find(j => j.id === id);
       if(!job) return;
@@ -987,7 +991,6 @@
       }
     }
 
-    // --- TEMPLATE GROUP MANAGEMENT & PRINTING ---
     function saveActiveListAsTemplate() {
       if(labels.length === 0) { showNotification("Your active list is empty. Scan some parts first!"); return; }
       
@@ -1047,13 +1050,11 @@
       }, 200);
     }
 
-    // --- STORAGE ---
     function saveData() { localStorage.setItem('savedBarcodeLabels', JSON.stringify(labels)); }
     function saveGroupsData() { localStorage.setItem('savedBarcodeGroups', JSON.stringify(savedGroups)); }
     function saveJobsData() { localStorage.setItem('savedJobCards', JSON.stringify(savedJobs)); }
     function saveHistoryData() { localStorage.setItem('scanHistoryList', JSON.stringify(scanHistory)); }
 
-    // --- RENDER ---
     function renderUI() {
       const listContainer = document.getElementById('list');
       const actionButtons = document.getElementById('action-buttons');
@@ -1111,7 +1112,6 @@
         });
       }
 
-      // Render Job Cards (Newest First)
       const jobsSection = document.getElementById('jobs-section');
       const jobsList = document.getElementById('jobs-list');
       if(savedJobs.length > 0) {
@@ -1143,7 +1143,6 @@
         jobsSection.style.display = 'none';
       }
 
-      // Render Template Groups (Newest First - with Barcodes button)
       const groupsList = document.getElementById('groups-list');
       if(savedGroups.length > 0) {
         groupsList.innerHTML = '';
@@ -1167,7 +1166,6 @@
         groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Click "+ Save Current List" above to create one.</div>';
       }
 
-      // Scan History
       const historySection = document.getElementById('history-section');
       const historyList = document.getElementById('history-list');
       if(scanHistory.length > 0) {
