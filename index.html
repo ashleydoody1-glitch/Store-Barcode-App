@@ -44,7 +44,7 @@
     @media screen {
       .app-container { max-width: 600px; margin: 0 auto; padding: 20px; }
       
-      h1 { font-size: 24px; text-align: center; margin-bottom: 12px; color: var(--primary); }
+      h1 { font-size: 24px; text-align: center; margin-bottom: 20px; color: var(--primary); }
       
       .btn-guide-top { background-color: var(--secondary); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
       .btn-guide-top:active { opacity: 0.8; }
@@ -429,22 +429,32 @@
       <button class="btn btn-clear" onclick="clearAllLabels()">Clear Active List</button>
     </div>
 
-    <!-- Job Cards Section -->
+    <!-- Job Cards Section (Collapsible) -->
     <div class="groups-section job-section" id="jobs-section" style="display: none;">
-      <div class="list-header" style="margin-top:0;">My Saved Job Cards</div>
-      <div id="jobs-list">
-        <!-- Job Cards render here -->
+      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; cursor: pointer;" onclick="toggleJobs()">
+        <span id="jobs-title-text">My Saved Job Cards ▾</span>
+        <span style="background: var(--info); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="jobs-count-badge">0</span>
+      </div>
+      <div class="scanned-list" id="jobs-list-container" style="display: none; background: transparent; box-shadow: none; margin-bottom: 0;">
+        <div id="jobs-list">
+          <!-- Job Cards render here -->
+        </div>
       </div>
     </div>
 
-    <!-- Saved Template Groups Section -->
-    <div class="groups-section" id="groups-section">
+    <!-- Saved Template Groups Section (Collapsible) -->
+    <div class="groups-section" id="groups-section" style="display: none;">
       <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
-        <span>My Template Groups</span>
-        <button class="btn-action edit" onclick="saveActiveListAsTemplate()" style="font-weight:bold; border-color:var(--primary); color:var(--primary); padding: 4px 10px;">+ Save Current List</button>
+        <span id="groups-title-text" onclick="toggleGroups()" style="cursor: pointer; flex-grow: 1;">My Template Groups ▾</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="groups-count-badge">0</span>
+          <button class="btn-action edit" onclick="saveActiveListAsTemplate()" style="font-weight:bold; border-color:var(--primary); color:var(--primary); padding: 4px 10px;">+ Save Current List</button>
+        </div>
       </div>
-      <div id="groups-list">
-        <!-- Groups render here -->
+      <div class="scanned-list" id="groups-list-container" style="display: none; background: transparent; box-shadow: none; margin-bottom: 0;">
+        <div id="groups-list">
+          <!-- Groups render here -->
+        </div>
       </div>
     </div>
 
@@ -474,10 +484,12 @@
     let html5QrCode = null;
     let promptMode = 'save'; // 'save' or 'rename'
     
-    // Carousel state
+    // Carousel state & toggle states (with localStorage persistence)
     let carouselItems = [];
     let carouselIndex = 0;
-    let historyExpanded = false;
+    let historyExpanded = JSON.parse(localStorage.getItem('historyExpanded')) || false;
+    let jobsExpanded = JSON.parse(localStorage.getItem('jobsExpanded')) || false;
+    let groupsExpanded = JSON.parse(localStorage.getItem('groupsExpanded')) || false;
 
     // Toast Notification helper
     function showNotification(msg) {
@@ -537,10 +549,29 @@
 
     function toggleHistory() {
       historyExpanded = !historyExpanded;
+      localStorage.setItem('historyExpanded', JSON.stringify(historyExpanded));
       const historyList = document.getElementById('history-list');
       const titleText = document.getElementById('history-title-text');
       historyList.style.display = historyExpanded ? 'block' : 'none';
       titleText.innerText = `Scan History (Last 25) ${historyExpanded ? '▴' : '▾'}`;
+    }
+
+    function toggleJobs() {
+      jobsExpanded = !jobsExpanded;
+      localStorage.setItem('jobsExpanded', JSON.stringify(jobsExpanded));
+      const jobsListContainer = document.getElementById('jobs-list-container');
+      const titleText = document.getElementById('jobs-title-text');
+      jobsListContainer.style.display = jobsExpanded ? 'block' : 'none';
+      titleText.innerText = `My Saved Job Cards ${jobsExpanded ? '▴' : '▾'}`;
+    }
+
+    function toggleGroups() {
+      groupsExpanded = !groupsExpanded;
+      localStorage.setItem('groupsExpanded', JSON.stringify(groupsExpanded));
+      const groupsListContainer = document.getElementById('groups-list-container');
+      const titleText = document.getElementById('groups-title-text');
+      groupsListContainer.style.display = groupsExpanded ? 'block' : 'none';
+      titleText.innerText = `My Template Groups ${groupsExpanded ? '▴' : '▾'}`;
     }
 
     // --- USER GUIDE MODAL CONTROLS ---
@@ -664,16 +695,22 @@
           labels[index].loc = loc;
           labels[index].desc = desc; 
           labels[index].qty = qty; 
+          // Move edited item to top
+          const item = labels.splice(index, 1)[0];
+          labels.unshift(item);
         }
         cancelEdit(); 
       } else {
-        const existing = labels.find(l => l.partNo === partNo);
-        if (existing) {
-          existing.qty += qty;
-          if (desc) existing.desc = desc;
-          if (loc) existing.loc = loc;
+        const existingIndex = labels.findIndex(l => l.partNo === partNo);
+        if (existingIndex > -1) {
+          labels[existingIndex].qty += qty;
+          if (desc) labels[existingIndex].desc = desc;
+          if (loc) labels[existingIndex].loc = loc;
+          // Move existing item to the top of the active list
+          const item = labels.splice(existingIndex, 1)[0];
+          labels.unshift(item);
         } else {
-          labels.push({ id: Date.now().toString(), partNo: partNo, loc: loc, desc: desc, qty: qty, oos: false });
+          labels.unshift({ id: Date.now().toString(), partNo: partNo, loc: loc, desc: desc, qty: qty, oos: false });
         }
         addToHistory(partNo, desc, loc);
       }
@@ -1173,10 +1210,18 @@
         });
       }
 
+      // Render Job Cards (Collapsible & Persistent State)
       const jobsSection = document.getElementById('jobs-section');
       const jobsList = document.getElementById('jobs-list');
+      const jobsListContainer = document.getElementById('jobs-list-container');
+      const jobsTitleText = document.getElementById('jobs-title-text');
+      document.getElementById('jobs-count-badge').innerText = savedJobs.length;
+
       if(savedJobs.length > 0) {
         jobsSection.style.display = 'block';
+        jobsListContainer.style.display = jobsExpanded ? 'block' : 'none';
+        jobsTitleText.innerText = `My Saved Job Cards ${jobsExpanded ? '▴' : '▾'}`;
+        
         jobsList.innerHTML = '';
         savedJobs.forEach(job => {
           const totalJobQty = job.items.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
@@ -1204,7 +1249,17 @@
         jobsSection.style.display = 'none';
       }
 
+      // Render Template Groups (Collapsible & Persistent State)
+      const groupsSection = document.getElementById('groups-section');
       const groupsList = document.getElementById('groups-list');
+      const groupsListContainer = document.getElementById('groups-list-container');
+      const groupsTitleText = document.getElementById('groups-title-text');
+      document.getElementById('groups-count-badge').innerText = savedGroups.length;
+
+      groupsSection.style.display = 'block';
+      groupsListContainer.style.display = groupsExpanded ? 'block' : 'none';
+      groupsTitleText.innerText = `My Template Groups ${groupsExpanded ? '▴' : '▾'}`;
+
       if(savedGroups.length > 0) {
         groupsList.innerHTML = '';
         savedGroups.forEach(group => {
@@ -1227,6 +1282,7 @@
         groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Click "+ Save Current List" above to create one.</div>';
       }
 
+      // Scan History
       const historySection = document.getElementById('history-section');
       const historyList = document.getElementById('history-list');
       if(scanHistory.length > 0) {
