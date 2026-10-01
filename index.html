@@ -46,10 +46,10 @@
       
       h1 { font-size: 24px; text-align: center; margin-bottom: 20px; color: var(--primary); }
       
-      .btn-guide-top { background-color: var(--secondary); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+      .btn-guide-top { background-color: var(--secondary); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
       .btn-guide-top:active { opacity: 0.8; }
 
-      .btn-search-top { background-color: var(--info); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+      .btn-search-top { background-color: var(--info); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
       .btn-search-top:active { opacity: 0.8; }
 
       .input-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; transition: all 0.3s ease; }
@@ -324,6 +324,12 @@
         <ul>
           <li><strong>Screen Barcodes:</strong> Open any saved Job Card or Template, tap <strong>📱 Screen Barcodes</strong>, and zap each large barcode directly off your phone screen using your wireless Zebra scanner.</li>
         </ul>
+
+        <h3>4. Backup & Migration</h3>
+        <ul>
+          <li><strong>Backup Data (JSON):</strong> Export your complete database (jobs, templates, history) to a JSON file to safely backup or transfer to a new phone.</li>
+          <li><strong>Restore Backup:</strong> Import a previously saved JSON backup file to instantly restore your data.</li>
+        </ul>
       </div>
 
       <button class="btn-close-modal" onclick="closeGuideModal()">Close Guide</button>
@@ -382,9 +388,15 @@
   <div class="app-container">
     <h1>Part Picker</h1>
     
-    <!-- EMBEDDED USER GUIDE & SEARCH BUTTONS -->
+    <!-- EMBEDDED USER GUIDE, SEARCH & BACKUP BUTTONS -->
     <button class="btn-search-top" onclick="openSearchModal()">🔍 Search Database</button>
     <button class="btn-guide-top" onclick="openGuideModal()">📖 User Guide & Instructions</button>
+    
+    <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+      <button class="btn-guide-top" style="margin-bottom:0; background-color: var(--success); flex: 1;" onclick="exportDataJSON()">💾 Backup JSON</button>
+      <button class="btn-guide-top" style="margin-bottom:0; background-color: var(--secondary); flex: 1;" onclick="triggerImportJSON()">📂 Restore JSON</button>
+      <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+    </div>
     
     <div class="input-card" id="input-card">
       <!-- Top Row: Part Number, Location, Scan Button -->
@@ -549,6 +561,72 @@
       newBtnNo.addEventListener('click', () => {
         modal.style.display = 'none';
       });
+    }
+
+    // --- BACKUP & RESTORE JSON FUNCTIONS ---
+    function exportDataJSON() {
+      const backupData = {
+        version: 1,
+        timestamp: new Date().toISOString(),
+        labels: JSON.parse(localStorage.getItem('savedBarcodeLabels')) || [],
+        savedGroups: JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [],
+        savedJobs: JSON.parse(localStorage.getItem('savedJobCards')) || [],
+        scanHistory: JSON.parse(localStorage.getItem('scanHistoryList')) || [],
+        contextEditing: JSON.parse(localStorage.getItem('editingContext')) || null,
+        uiStates: {
+          historyExpanded: JSON.parse(localStorage.getItem('historyExpanded')) || false,
+          jobsExpanded: JSON.parse(localStorage.getItem('jobsExpanded')) || false,
+          groupsExpanded: JSON.parse(localStorage.getItem('groupsExpanded')) || false
+        }
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `part_picker_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showNotification("Backup JSON downloaded successfully!");
+    }
+
+    function triggerImportJSON() {
+      document.getElementById('import-file-input').click();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!imported || typeof imported !== 'object') {
+            throw new Error("Invalid JSON structure");
+          }
+
+          showCustomConfirm("Restoring this backup will replace your existing local data. Do you want to proceed?", () => {
+            if (imported.labels) localStorage.setItem('savedBarcodeLabels', JSON.stringify(imported.labels));
+            if (imported.savedGroups) localStorage.setItem('savedBarcodeGroups', JSON.stringify(imported.savedGroups));
+            if (imported.savedJobs) localStorage.setItem('savedJobCards', JSON.stringify(imported.savedJobs));
+            if (imported.scanHistory) localStorage.setItem('scanHistoryList', JSON.stringify(imported.scanHistory));
+            if (imported.contextEditing !== undefined) localStorage.setItem('editingContext', JSON.stringify(imported.contextEditing));
+            if (imported.uiStates) {
+              if (imported.uiStates.historyExpanded !== undefined) localStorage.setItem('historyExpanded', JSON.stringify(imported.uiStates.historyExpanded));
+              if (imported.uiStates.jobsExpanded !== undefined) localStorage.setItem('jobsExpanded', JSON.stringify(imported.uiStates.jobsExpanded));
+              if (imported.uiStates.groupsExpanded !== undefined) localStorage.setItem('groupsExpanded', JSON.stringify(imported.uiStates.groupsExpanded));
+            }
+            showNotification("Backup restored successfully! Reloading app...");
+            setTimeout(() => { location.reload(); }, 1200);
+          });
+        } catch (err) {
+          console.error(err);
+          showNotification("Error parsing backup file. Ensure it is a valid Part Picker JSON backup.");
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
     }
 
     // Initialization
