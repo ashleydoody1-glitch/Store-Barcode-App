@@ -1,62 +1,1499 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0056b3"><title>Part Picker</title>
-<script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-<script defer src="https://unpkg.com/html5-qrcode" crossorigin="anonymous"></script>
-<style>
-:root{--p:#0056b3;--i:#117a8b;--ok:#198754;--warn:#d99a00;--bad:#c62828;--ink:#1e293b;--bg:#f4f7f6;--card:#fff;--line:#d8dee5}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#263238}.app{max-width:680px;margin:auto;padding:18px}h1{margin:0 0 16px;text-align:center;color:var(--p);font-size:26px}.card,.list{background:var(--card);border-radius:12px;box-shadow:0 2px 10px #00000013;padding:16px;margin:12px 0}.top-actions,.actions,.row{display:flex;gap:9px}.top-actions{margin-bottom:16px}.row{align-items:end}.grow{flex:1}.loc{width:95px}.qty{width:88px}label{display:block;font-size:12px;font-weight:700;color:#4b5563;margin:0 0 5px}input{width:100%;padding:12px;border:1px solid #bfc7d1;border-radius:7px;background:white;font:inherit;text-transform:uppercase}input:focus,button:focus-visible{outline:3px solid #80b7f5;outline-offset:2px;border-color:var(--p)}button{border:0;border-radius:7px;padding:11px 13px;background:var(--p);color:#fff;font:inherit;font-weight:700;cursor:pointer}button:hover{filter:brightness(.94)}button.secondary{background:#5f6b76}button.info{background:var(--i)}button.good{background:var(--ok)}button.warn{background:var(--warn);color:#111}button.danger{background:var(--bad)}button.outline{background:#fff;color:var(--bad);border:1px solid var(--bad)}button.small{padding:7px 9px;font-size:12px}.header{display:flex;justify-content:space-between;align-items:center;margin:22px 0 8px;font-size:18px;font-weight:800}.badge{background:var(--p);color:white;border-radius:99px;padding:2px 9px;font-size:13px}.item{padding:12px 0;border-bottom:1px solid #e8edf2}.item:last-child{border:0}.part{font:700 18px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--p)}.meta{margin-top:5px;word-break:break-word}.tag{display:inline-block;background:#e5ebf1;border-radius:5px;padding:2px 6px;font-size:11px;font-weight:800;margin-right:5px}.oos{color:var(--bad);background:#fff;border:1px solid var(--bad)}.item-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px}.item-actions{display:flex;gap:6px;flex-wrap:wrap}.empty{padding:20px;text-align:center;color:#6b7280;font-style:italic}.section{border-top:2px dashed #c7d0d9;margin-top:26px;padding-top:12px}.group{background:white;border:1px solid var(--line);border-radius:9px;padding:12px;margin:9px 0}.group-title{font-weight:800}.subtle{color:#6b7280;font-size:12px;margin-top:4px}.hidden{display:none!important}.editing{border:2px solid var(--warn)}dialog{width:min(94vw,560px);border:0;border-radius:12px;padding:0;box-shadow:0 20px 60px #0008}dialog::backdrop{background:#000a}.modal{padding:18px}.modal h2{margin:0 0 14px;color:var(--p);font-size:20px}.modal-actions{display:flex;gap:9px;margin-top:16px}.modal-actions button{flex:1}.scan-reader{min-height:240px;background:#000}.barcode{text-align:center;background:#f8fafc;border:1px dashed #b9c4d0;border-radius:8px;padding:12px}.barcode svg{max-width:100%;height:auto}.tabs{display:flex;gap:8px;margin-bottom:10px}.tabs button{flex:1;background:#e5e7eb;color:#263238}.tabs button.active{background:var(--i);color:#fff}@media(max-width:480px){.app{padding:12px}.row{flex-wrap:wrap}.part-field{width:calc(100% - 104px)}.loc{width:95px}.scan{width:100%}.top-actions{flex-direction:column}.item-footer{align-items:flex-start;flex-direction:column}.actions button{flex:1}}@media print{body{background:white}.app,dialog,#toast{display:none!important}#print-area{display:grid!important;grid-template-columns:repeat(3,1fr);gap:10mm;padding:10mm}.print-card{border:1px solid #000;height:55mm;padding:8mm;text-align:center;page-break-inside:avoid}.print-card .part{color:#000}.print-card svg{max-width:100%;max-height:22mm}}
-#print-area{display:none}#toast{position:fixed;z-index:10;top:18px;left:50%;transform:translateX(-50%);max-width:90vw;background:var(--ink);color:white;padding:11px 16px;border-radius:8px;font-weight:700;box-shadow:0 4px 18px #0005}
-</style></head>
-<body><main class="app"><h1>Part Picker</h1>
-<div class="top-actions"><button class="info" data-action="open-search">Search database</button><button class="secondary" data-action="guide">User guide</button></div>
-<section id="entry-card" class="card"><div class="row"><div class="grow part-field"><label for="partNo">Part number</label><input id="partNo" autocomplete="off" placeholder="Scan or type"></div><div class="loc"><label for="loc">Location</label><input id="loc" maxlength="10" autocomplete="off"></div><div class="scan"><button type="button" data-action="scan">Scan</button></div></div><div style="margin-top:12px"><label for="desc">Item description</label><input id="desc" autocomplete="off"></div><div class="row" style="margin-top:12px"><div class="qty"><label for="qty">Qty</label><input id="qty" type="number" min="1" max="999" step="1" inputmode="numeric" value="1"></div><div class="grow"><button id="addButton" type="button" data-action="add" style="width:100%">Add to list</button></div></div><div id="editActions" class="actions hidden" style="margin-top:10px"><button class="secondary" data-action="cancel-edit">Cancel edit</button></div></section>
-<div class="header"><span>Active scan list</span><span id="count" class="badge">0</span></div><section id="editingBanner" class="card hidden"></section><section id="list" class="list"></section>
-<div id="activeActions" class="actions hidden"><button class="info" data-action="save-job">Save to job card</button><button class="good" data-action="barcodes-active">Screen barcodes</button><button class="outline" data-action="clear-list">Clear list</button></div>
-<section class="section"><div class="header"><span>Saved job cards</span><span id="jobsCount" class="badge">0</span></div><div id="jobs"></div></section>
-<section class="section"><div class="header"><span>Template groups</span><span id="groupsCount" class="badge">0</span></div><button class="good" data-action="save-template">Save current list as template</button><div id="groups"></div></section>
-<section class="section"><div class="header"><span>Scan history</span><button class="small outline" data-action="clear-history">Clear all</button></div><div id="history"></div></section></main><div id="toast" class="hidden"></div><div id="print-area"></div>
-<dialog id="formDialog"><form method="dialog" class="modal"><h2 id="formTitle">Save</h2><label id="fieldOneLabel" for="fieldOne">Name</label><input id="fieldOne" maxlength="80" required><div id="fieldTwoWrap" style="margin-top:12px"><label id="fieldTwoLabel" for="fieldTwo">Description</label><input id="fieldTwo" maxlength="160"></div><div class="modal-actions"><button class="secondary" value="cancel">Cancel</button><button id="formSubmit" value="default">Save</button></div></form></dialog>
-<dialog id="confirmDialog"><div class="modal"><h2>Confirm action</h2><p id="confirmText"></p><div class="modal-actions"><button class="secondary" data-action="confirm-no">Cancel</button><button class="danger" data-action="confirm-yes">Confirm</button></div></div></dialog>
-<dialog id="searchDialog"><div class="modal"><h2>Search part database</h2><label for="searchInput">Part number or description</label><input id="searchInput" autocomplete="off" placeholder="e.g. thermostat"><div id="searchResults" class="list" style="box-shadow:none;padding:0;max-height:45vh;overflow:auto"></div><div class="modal-actions"><button class="secondary" data-action="close-search">Close</button></div></div></dialog>
-<dialog id="viewerDialog"><div class="modal"><h2 id="viewerTitle">Part list</h2><div class="tabs"><button class="active" data-action="viewer-list">Part list</button><button data-action="viewer-barcode">Screen barcodes</button></div><div id="viewerList"></div><div id="viewerBarcode" class="hidden barcode"><div id="barcodePart" class="part"></div><div id="barcodeMeta" class="meta"></div><svg id="barcodeSvg"></svg><div class="actions"><button class="secondary" data-action="barcode-prev">Prev</button><button class="secondary" data-action="barcode-next">Next</button></div><p id="barcodeCounter"></p></div><div class="modal-actions"><button class="secondary" data-action="close-viewer">Close</button></div></div></dialog>
-<dialog id="scannerDialog"><div class="modal"><h2>Scan barcode</h2><div id="reader" class="scan-reader"></div><div class="modal-actions"><button class="danger" data-action="stop-scan">Cancel scan</button></div></div></dialog>
-<dialog id="guideDialog"><div class="modal"><h2>Part Picker guide</h2><p><b>Search database</b> searches your local scan history, jobs, and templates.</p><p><b>Templates</b> load reusable groups into the active list. Save that list as a job card when it is ready.</p><p><b>Screen barcodes</b> displays one Code 128 barcode at a time for scanning at a terminal.</p><p>All data is stored locally in this browser. Export or server sync should be added before relying on this as the only record.</p><div class="modal-actions"><button class="secondary" data-action="close-guide">Close</button></div></div></dialog>
-<script>
-'use strict';
-const KEYS={labels:'partPicker.labels.v2',jobs:'partPicker.jobs.v2',groups:'partPicker.groups.v2',history:'partPicker.history.v2'};
-const $=id=>document.getElementById(id); const state={labels:[],jobs:[],groups:[],history:[],editingId:null,context:null,scanner:null,viewerItems:[],viewerIndex:0,formMode:null,confirm:null};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-const id=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
-const qty=v=>Math.min(999,Math.max(1,Number.parseInt(v,10)||1));
-function toast(message){const t=$('toast');t.textContent=message;t.classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.add('hidden'),3200)}
-function read(key,fallback){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch(e){console.error('Storage read failed',key,e);toast('Saved data was unreadable; defaults were used.');return fallback}}
-function write(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){console.error('Storage write failed',key,e);toast('Could not save data on this device.');return false}}
-function item(raw={}){return{id:raw.id||id(),partNo:String(raw.partNo||'').toUpperCase().replace(/[^A-Z0-9-]/g,''),loc:String(raw.loc||'').toUpperCase().replace(/[^A-Z0-9-]/g,''),desc:String(raw.desc||'').trim().toUpperCase(),qty:qty(raw.qty),oos:Boolean(raw.oos)}}
-function init(){state.labels=read(KEYS.labels,[]).map(item);state.jobs=read(KEYS.jobs,[]).map(j=>({...j,id:j.id||id(),items:(j.items||[]).map(item)}));state.groups=read(KEYS.groups,[]).map(g=>({...g,id:g.id||id(),items:(g.items||[]).map(item)}));state.history=read(KEYS.history,[]).map(item).slice(0,25);render();$('partNo').focus()}
-function persist(){write(KEYS.labels,state.labels);write(KEYS.jobs,state.jobs);write(KEYS.groups,state.groups);write(KEYS.history,state.history)}
-function render(){renderList();renderJobs();renderGroups();renderHistory()}
-function renderList(){const total=state.labels.reduce((n,x)=>n+x.qty,0);$('count').textContent=total;$('activeActions').classList.toggle('hidden',!state.labels.length);$('list').innerHTML=state.labels.length?state.labels.map(x=>itemHtml(x,true)).join(''):'<div class="empty">No parts scanned yet.</div>';$('editingBanner').classList.toggle('hidden',!state.context);$('editingBanner').textContent=state.context?`Editing ${state.context.type}: ${state.context.name}. Save changes when finished.`:''}
-function itemHtml(x,active=false){return `<div class="item"><div class="part">${esc(x.partNo)}</div><div class="meta">${x.loc?`<span class="tag">${esc(x.loc)}</span>`:''}${x.oos?'<span class="tag oos">ON ORDER</span>':''}${esc(x.desc||'No description')}</div><div class="item-footer"><span class="tag">Qty ${x.qty}</span><div class="item-actions">${active?`<button class="small secondary" data-action="qty" data-id="${esc(x.id)}" data-n="-1">−</button><button class="small secondary" data-action="qty" data-id="${esc(x.id)}" data-n="1">+</button><button class="small ${x.oos?'danger':'secondary'}" data-action="oos" data-id="${esc(x.id)}">${x.oos?'Ordered':'On order'}</button><button class="small info" data-action="edit" data-id="${esc(x.id)}">Edit</button><button class="small danger" data-action="remove" data-id="${esc(x.id)}">Remove</button>`:`<button class="small info" data-action="readd" data-id="${esc(x.id)}">Add to list</button>`}</div></div></div>`}
-function renderJobs(){const jobs=$('jobs');$('jobsCount').textContent=state.jobs.length;jobs.innerHTML=state.jobs.length?state.jobs.map(j=>groupHtml(j,'jobNo','job')).join(''):'<div class="empty">No saved job cards.</div>'}
-function renderGroups(){const groups=$('groups');$('groupsCount').textContent=state.groups.length;groups.innerHTML=state.groups.length?state.groups.map(g=>groupHtml(g,'name','group')).join(''):'<div class="empty">No template groups saved.</div>'}
-function groupHtml(g,key,type){const name=esc(g[key]);const description=esc(g.description||'');const total=g.items.reduce((n,x)=>n+x.qty,0);return `<article class="group"><div class="group-title">${name} <span class="tag">${total} items</span></div><div class="subtle">${description||esc(g.date||'')}</div><div class="item-actions" style="margin-top:9px"><button class="small info" data-action="view" data-type="${type}" data-id="${esc(g.id)}">View</button><button class="small good" data-action="load" data-type="${type}" data-id="${esc(g.id)}">${type==='group'?'Load to list':'Edit'}</button>${type==='group'?`<button class="small good" data-action="print" data-id="${esc(g.id)}">Print</button>`:''}<button class="small danger" data-action="delete-${type}" data-id="${esc(g.id)}">Delete</button></div></article>`}
-function renderHistory(){$('history').innerHTML=state.history.length?state.history.map(x=>itemHtml(x,false)).join(''):'<div class="empty">No scan history.</div>'}
-function findPart(partNo){return [...state.history,...state.jobs.flatMap(j=>j.items),...state.groups.flatMap(g=>g.items)].find(x=>x.partNo===partNo)}
-function add(){const partNo=$('partNo').value.toUpperCase().replace(/[^A-Z0-9-]/g,'');const desc=$('desc').value.trim().toUpperCase();const loc=$('loc').value.toUpperCase().replace(/[^A-Z0-9-]/g,'');if(!partNo)return toast('Enter a valid part number.');if(!desc)return toast('Enter an item description.');const record=item({partNo,desc,loc,qty:$('qty').value});if(state.editingId){const i=state.labels.findIndex(x=>x.id===state.editingId);if(i>=0)state.labels[i]={...record,id:state.editingId,oos:state.labels[i].oos};state.editingId=null;$('entry-card').classList.remove('editing');$('addButton').textContent='Add to list';$('editActions').classList.add('hidden')}else{const existing=state.labels.find(x=>x.partNo===partNo);if(existing){existing.qty=qty(existing.qty+record.qty);existing.desc=record.desc;existing.loc=record.loc}else state.labels.unshift(record);state.history=[record,...state.history.filter(x=>x.partNo!==partNo)].slice(0,25)}persist();resetForm();render()}
-function resetForm(){$('partNo').value='';$('loc').value='';$('desc').value='';$('qty').value=1;$('partNo').focus()}
-function editLabel(record){state.editingId=record.id;$('partNo').value=record.partNo;$('loc').value=record.loc;$('desc').value=record.desc;$('qty').value=record.qty;$('entry-card').classList.add('editing');$('addButton').textContent='Update label';$('editActions').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
-function confirm(message,action){state.confirm=action;$('confirmText').textContent=message;$('confirmDialog').showModal()}
-function openForm(mode,values={}){state.formMode=mode;const cfg={job:['Save job card','Job / bus number','Job description (optional)',true],template:['Save template','Template name','',false],rename:['Rename record','Name','Description (optional)',true]}[mode];$('formTitle').textContent=cfg[0];$('fieldOneLabel').textContent=cfg[1];$('fieldTwoLabel').textContent=cfg[2];$('fieldTwoWrap').classList.toggle('hidden',!cfg[3]);$('fieldOne').value=values.one||'';$('fieldTwo').value=values.two||'';$('formDialog').showModal();setTimeout(()=>$('fieldOne').focus(),0)}
-function submitForm(){const one=$('fieldOne').value.trim().toUpperCase(),two=$('fieldTwo').value.trim().toUpperCase();if(!one)return toast('A name is required.');if(state.formMode==='job'){state.jobs.unshift({id:id(),jobNo:one,description:two,date:new Date().toLocaleDateString(),items:structuredClone(state.labels)});persist();render();confirm(`Job ${one} saved. Clear the active list?`,()=>{state.labels=[];persist();render()})}if(state.formMode==='template'){state.groups.unshift({id:id(),name:one,date:new Date().toLocaleDateString(),items:structuredClone(state.labels)});persist();render();toast('Template saved.')}if(state.formMode==='rename'&&state.context){const collection=state.context.type==='job'?state.jobs:state.groups;const rec=collection.find(x=>x.id===state.context.id);if(rec){if(state.context.type==='job'){rec.jobNo=one;rec.description=two}else rec.name=one;persist();render()}}}
-function openViewer(items,title,barcode=false){state.viewerItems=items;state.viewerIndex=0;$('viewerTitle').textContent=title;$('viewerList').innerHTML=items.map(x=>itemHtml(x,false)).join('')||'<div class="empty">No items.</div>';$('viewerDialog').showModal();if(barcode)showBarcode()}
-function showBarcode(){const x=state.viewerItems[state.viewerIndex];if(!x)return;$('viewerList').classList.add('hidden');$('viewerBarcode').classList.remove('hidden');document.querySelector('[data-action="viewer-list"]').classList.remove('active');document.querySelector('[data-action="viewer-barcode"]').classList.add('active');$('barcodePart').textContent=x.partNo;$('barcodeMeta').textContent=`${x.loc?x.loc+' — ':''}${x.desc}`;$('barcodeCounter').textContent=`${state.viewerIndex+1} of ${state.viewerItems.length}`;if(typeof JsBarcode==='undefined'){toast('Barcode library failed to load.');return}try{JsBarcode('#barcodeSvg',x.partNo,{format:'CODE128',width:2,height:78,displayValue:true,margin:6})}catch(e){console.error(e);toast('Could not generate barcode.')}}
-async function startScan(){if(typeof Html5Qrcode==='undefined')return toast('Scanner library failed to load.');if(state.scanner)return;try{$('scannerDialog').showModal();state.scanner=new Html5Qrcode('reader');await state.scanner.start({facingMode:'environment'},{fps:12,qrbox:{width:300,height:150},formatsToSupport:[Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.UPC_A]},text=>{stopScan().then(()=>{$('partNo').value=text.toUpperCase().replace(/[^A-Z0-9-]/g,'');lookup();navigator.vibrate?.(100)})})}catch(e){console.error(e);toast('Unable to access the camera. Check HTTPS and camera permission.');await stopScan()}}
-async function stopScan(){try{if(state.scanner){await state.scanner.stop();await state.scanner.clear()}}catch(e){console.warn(e)}finally{state.scanner=null;if($('scannerDialog').open)$('scannerDialog').close()}}
-function lookup(){const found=findPart($('partNo').value.toUpperCase().replace(/[^A-Z0-9-]/g,''));if(found){if(!$('desc').value)$('desc').value=found.desc;if(!$('loc').value)$('loc').value=found.loc}$('loc').focus()}
-function search(){const q=$('searchInput').value.trim().toUpperCase();const map=new Map;[...state.history,...state.jobs.flatMap(x=>x.items),...state.groups.flatMap(x=>x.items)].forEach(x=>{if(!q||x.partNo.includes(q)||x.desc.includes(q))map.set(x.partNo,x)});$('searchResults').innerHTML=q?[...map.values()].map(x=>itemHtml(x,false)).join('')||'<div class="empty">No matching parts.</div>':'<div class="empty">Type a search term.</div>'}
-function printGroup(group){const out=$('print-area');out.innerHTML='';group.items.forEach(x=>{for(let n=0;n<x.qty;n++){const card=document.createElement('div');card.className='print-card';card.innerHTML=`<div class="part">${esc(x.partNo)}</div><div>${esc(x.loc)}</div><div>${esc(x.desc)}</div><svg></svg>`;out.append(card);try{JsBarcode(card.querySelector('svg'),x.partNo,{format:'CODE128',width:2,height:48,displayValue:false})}catch(e){console.error(e)}}});window.print();out.innerHTML=''}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,record=state.labels.find(x=>x.id===b.dataset.id);if(a==='add')add();else if(a==='scan')startScan();else if(a==='stop-scan')stopScan();else if(a==='cancel-edit'){state.editingId=null;resetForm();$('entry-card').classList.remove('editing');$('addButton').textContent='Add to list';$('editActions').classList.add('hidden')}else if(a==='edit'&&record)editLabel(record);else if(a==='remove'&&record)confirm(`Remove ${record.partNo}?`,()=>{state.labels=state.labels.filter(x=>x.id!==record.id);persist();render()});else if(a==='qty'&&record){record.qty=qty(record.qty+Number(b.dataset.n));persist();render()}else if(a==='oos'&&record){record.oos=!record.oos;persist();render()}else if(a==='clear-list')confirm('Clear the active list?',()=>{state.labels=[];persist();render()});else if(a==='clear-history')confirm('Clear all scan history?',()=>{state.history=[];persist();render()});else if(a==='save-job'){if(state.labels.length)openForm('job');else toast('Your active list is empty.')}else if(a==='save-template'){if(state.labels.length)openForm('template');else toast('Your active list is empty.')}else if(a==='barcodes-active')openViewer(state.labels,'Active list',true);else if(a==='open-search'){$('searchInput').value='';search();$('searchDialog').showModal();setTimeout(()=>$('searchInput').focus(),0)}else if(a==='close-search')$('searchDialog').close();else if(a==='guide')$('guideDialog').showModal();else if(a==='close-guide')$('guideDialog').close();else if(a==='confirm-no')$('confirmDialog').close();else if(a==='confirm-yes'){const fn=state.confirm;state.confirm=null;$('confirmDialog').close();fn?.()}else if(a==='view'){const col=b.dataset.type==='job'?state.jobs:state.groups;const r=col.find(x=>x.id===b.dataset.id);if(r)openViewer(r.items,b.dataset.type==='job'?r.jobNo:r.name)}else if(a==='load'){const col=b.dataset.type==='job'?state.jobs:state.groups;const r=col.find(x=>x.id===b.dataset.id);if(r)confirm(`Replace the active list with ${b.dataset.type==='job'?'job':'template'} ${b.dataset.type==='job'?r.jobNo:r.name}?`,()=>{state.labels=structuredClone(r.items).map(item);state.context={type:b.dataset.type,id:r.id,name:b.dataset.type==='job'?r.jobNo:r.name};persist();render()})}else if(a==='delete-job'||a==='delete-group'){const type=a.endsWith('job')?'job':'group';confirm(`Delete this ${type} permanently?`,()=>{if(type==='job')state.jobs=state.jobs.filter(x=>x.id!==b.dataset.id);else state.groups=state.groups.filter(x=>x.id!==b.dataset.id);persist();render()})}else if(a==='print'){const g=state.groups.find(x=>x.id===b.dataset.id);if(g)printGroup(g)}else if(a==='readd'){const x=state.history.find(x=>x.id===b.dataset.id);if(x){$('partNo').value=x.partNo;$('loc').value=x.loc;$('desc').value=x.desc;$('qty').value=1;add();$('searchDialog').close()}}else if(a==='viewer-list'){$('viewerList').classList.remove('hidden');$('viewerBarcode').classList.add('hidden');b.classList.add('active');document.querySelector('[data-action="viewer-barcode"]').classList.remove('active')}else if(a==='viewer-barcode')showBarcode();else if(a==='barcode-prev'){state.viewerIndex=Math.max(0,state.viewerIndex-1);showBarcode()}else if(a==='barcode-next'){state.viewerIndex=Math.min(state.viewerItems.length-1,state.viewerIndex+1);showBarcode()}else if(a==='close-viewer')$('viewerDialog').close()});
-$('partNo').addEventListener('change',lookup);$('searchInput').addEventListener('input',search);$('formDialog').addEventListener('close',()=>{if($('formDialog').returnValue==='default')submitForm()});document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement.id==='partNo'){e.preventDefault();lookup()}if(e.key==='Escape'&&state.scanner)stopScan()});init();
-</script></body></html>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part Picker</title>
+  
+  <!-- Standard & Mobile Web App Icons -->
+  <link rel="icon" type="image/svg+xml" href="https://api.iconify.design/lucide:box.svg?color=%230056b3">
+  <link rel="apple-touch-icon" href="https://api.iconify.design/lucide:box.svg?color=%230056b3">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Part Picker","short_name":"PartPicker","start_url":".","display":"standalone","background_color":"#f4f7f6","theme_color":"#0056b3","icons":[{"src":"https://api.iconify.design/lucide:box.svg?color=%230056b3","sizes":"192x192","type":"image/svg+xml"}]}'>
+  <meta name="theme-color" content="#0056b3">
+
+  <!-- JsBarcode for generating A4 print sheets and screen barcodes -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <!-- Html5-Qrcode for scanning barcodes via camera -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  
+  <style>
+    /* --- MOBILE APP UI STYLES (Screen Only) --- */
+    :root {
+      --primary: #0056b3;
+      --primary-dark: #004494;
+      --secondary: #6c757d;
+      --danger: #dc3545;
+      --success: #28a745;
+      --warning: #ffc107;
+      --info: #17a2b8;
+      --bg: #f4f7f6;
+      --card-bg: #ffffff;
+      --text: #333333;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    @media screen {
+      .app-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      
+      h1 { font-size: 24px; text-align: center; margin-bottom: 20px; color: var(--primary); }
+      
+      .btn-guide-top { background-color: var(--secondary); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+      .btn-guide-top:active { opacity: 0.8; }
+
+      .btn-search-top { background-color: var(--info); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s; }
+      .btn-search-top:active { opacity: 0.8; }
+
+      .input-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 24px; transition: all 0.3s ease; }
+      .input-card.editing { border: 2px solid var(--warning); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); }
+      
+      label { font-weight: 600; display: block; margin-bottom: 6px; font-size: 13px; color: #555; }
+      
+      .input-row-top { display: flex; gap: 8px; margin-bottom: 16px; align-items: flex-end; }
+      .part-col { flex-grow: 1; }
+      .loc-col { width: 85px; flex-shrink: 0; }
+      .scan-col { width: 85px; flex-shrink: 0; }
+
+      .input-row { margin-bottom: 16px; }
+      .input-row-split { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-end; }
+      .qty-container { width: 90px; flex-shrink: 0; }
+
+      input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; transition: border-color 0.2s; background: #fff; }
+      input[type="text"] { text-transform: uppercase; }
+      input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: var(--primary); }
+      
+      .btn-scan-trigger { background-color: var(--text); color: white; border: none; border-radius: 6px; padding: 12px 0; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; white-space: nowrap; height: 48px; box-sizing: border-box; }
+
+      .btn { display: block; width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+      .btn:active { opacity: 0.8; }
+      
+      .button-group { display: flex; gap: 10px; }
+      
+      .btn-cancel { background-color: var(--secondary); display: none; }
+      .btn-update { background-color: var(--warning); color: #000; }
+      .btn-group-init { background-color: var(--success); margin-top: 12px; }
+      .btn-job-save { background-color: var(--info); margin-top: 12px; }
+
+      .btn-clear { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px; margin-bottom: 40px; }
+      
+      .list-header { font-weight: bold; margin-top: 30px; margin-bottom: 12px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+      
+      /* Workbench Editing Banner */
+      .editing-banner { background: var(--warning); color: #000; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; display: flex; flex-direction: column; gap: 10px; }
+      .editing-banner-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+      .editing-banner-title { flex-grow: 1; }
+      .btn-banner-rename { background: transparent; border: 1px solid #000; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+      .btn-banner-rename:active { background: rgba(0,0,0,0.1); }
+      .btn-banner-save { background: var(--success); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+      .btn-banner-cancel { background: transparent; color: #000; border: 1px solid #000; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+      .scanned-list { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 10px; }
+      .scanned-item { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 6px; }
+      .scanned-item:last-child { border-bottom: none; }
+
+      .item-part-line { font-weight: bold; font-size: 18px; font-family: monospace; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .item-desc-line { font-size: 13px; color: #555; font-weight: 500; word-break: break-word; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+      
+      .item-footer-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid #f2f2f2; padding-top: 8px; margin-top: 2px; }
+
+      /* Qty & Location Badges */
+      .qty-badge { background: #e2e8f0; color: #1e293b; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; }
+      .qty-btn { background: none; border: none; font-weight: bold; cursor: pointer; padding: 0 4px; font-size: 14px; color: #555; }
+      .qty-btn:hover { color: var(--primary); }
+      
+      .loc-badge { background: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 6px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 3px; letter-spacing: 0.5px; }
+      .oos-badge { color: var(--danger); border: 1px solid var(--danger); padding: 1px 4px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; white-space: nowrap; line-height: 1.2; }
+
+      .item-actions { display: flex; gap: 6px; }
+      .btn-action { background: transparent; border: 1px solid #ccc; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600; }
+      .btn-action.oos { color: #666; border-color: #ccc; }
+      .btn-action.oos.active { background-color: var(--danger); color: white; border-color: var(--danger); }
+      .btn-action.edit { color: var(--primary); border-color: var(--primary); }
+      .btn-action.remove { color: var(--danger); border-color: var(--danger); }
+
+      .empty-state { padding: 20px; text-align: center; color: #888; font-style: italic; }
+
+      /* Groups & Jobs Section */
+      .groups-section { margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 15px; }
+      .job-section { border-top: 2px dashed var(--info); }
+      
+      .group-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;}
+      .job-card { border-left: 4px solid var(--info); }
+      
+      .group-header { display: flex; justify-content: space-between; align-items: center; }
+      .group-title { font-weight: bold; font-size: 16px; color: var(--text); }
+      .group-count { font-size: 12px; color: #666; background: #eee; padding: 2px 6px; border-radius: 10px; }
+      
+      .group-actions { display: flex; gap: 6px; }
+      .btn-load { background: var(--primary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-barcode-group { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-view { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-print-group { background: var(--success); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-edit-group { background: var(--secondary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
+      .btn-delete-group { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;}
+
+      /* Fullscreen Scanner Modal */
+      #scanner-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+      #reader { width: 100%; max-width: 500px; background: black; }
+      .btn-close-scanner { margin-top: 20px; background: var(--danger); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; max-width: 500px; }
+
+      /* In-App Custom Dialog Modal */
+      #job-prompt-modal, #custom-confirm-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+      .prompt-card { background: white; width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+      .prompt-title { font-size: 18px; font-weight: bold; color: var(--primary); margin: 0; }
+      .prompt-group { display: flex; flex-direction: column; gap: 6px; }
+      .prompt-buttons { display: flex; gap: 10px; margin-top: 5px; }
+      .btn-prompt-save { flex: 1; background: var(--success); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
+      .btn-prompt-cancel { flex: 1; background: var(--secondary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
+
+      /* Database Search Modal */
+      #search-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10002; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+      .search-modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
+      .search-results-list { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+
+      /* Job/Barcode Carousel & User Guide Modal Viewer */
+      #job-modal, #guide-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+      .job-modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
+      .job-modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+      .job-modal-title { font-size: 20px; font-weight: bold; color: var(--info); margin: 0; word-break: break-word; }
+      .job-modal-date { font-size: 13px; color: #888; white-space: nowrap; }
+      
+      .job-modal-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+      .tab-btn { flex: 1; padding: 10px; background: #eee; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+      .tab-btn.active { background: var(--info); color: white; }
+
+      .tab-content { display: none; flex-direction: column; gap: 10px; }
+      .tab-content.active { display: flex; }
+
+      /* User Guide Modal Formatting */
+      .guide-body { font-size: 14px; line-height: 1.5; color: #333; display: flex; flex-direction: column; gap: 14px; }
+      .guide-body h3 { color: var(--primary); margin: 10px 0 4px 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+      .guide-body ul { margin: 0; padding-left: 20px; }
+      .guide-body li { margin-bottom: 6px; }
+
+      /* Screen Swipeable Barcode Carousel View */
+      .carousel-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #f9f9f9; border: 2px dashed #ccc; border-radius: 8px; text-align: center; }
+      .carousel-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; }
+      .carousel-part { font-size: 22px; font-weight: bold; font-family: monospace; margin-bottom: 4px; color: var(--primary); }
+      .carousel-loc { font-size: 14px; font-weight: bold; background: #e2e8f0; color: #1e293b; padding: 2px 8px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
+      .carousel-desc { font-size: 14px; color: #555; margin-bottom: 15px; font-weight: 500; }
+      .carousel-barcode-box { width: 100%; display: flex; justify-content: center; background: #fff; padding: 10px; }
+      .carousel-barcode-box svg { max-width: 100%; height: 90px; }
+      
+      .carousel-nav { display: flex; width: 100%; gap: 10px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+      .btn-carousel { flex: 1; background: var(--text); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; }
+      .btn-carousel:disabled { background: #ccc; cursor: not-allowed; }
+      .carousel-counter { font-weight: bold; font-size: 14px; color: #666; white-space: nowrap; }
+
+      .job-modal-item { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 4px;}
+      .job-modal-item:last-child { border-bottom: none; }
+      .job-modal-part { font-size: 18px; font-weight: bold; font-family: monospace; display: flex; align-items: center; gap: 8px; }
+      .job-modal-desc { font-size: 13px; color: #555; display: flex; align-items: center; gap: 8px; }
+      .btn-close-modal { background: var(--text); color: white; padding: 14px; border: none; border-radius: 8px; width: 100%; margin-top: 20px; font-weight: bold; cursor: pointer; font-size: 16px;}
+
+      /* In-App Toast Notification */
+      #toast-notification {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e293b;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 20000;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        text-align: center;
+        max-width: 90%;
+        font-size: 15px;
+      }
+
+      #print-layout { display: none; }
+    }
+
+    /* --- PRINT STYLES (A4 Landscape) --- */
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      .app-container, #scanner-modal, #job-modal, #guide-modal, #search-modal, #custom-confirm-modal, #toast-notification { display: none !important; }
+      #print-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10mm; width: 100%; }
+      body { background: white; color: black; }
+      .print-card { border: 1px solid #000; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 160px; box-sizing: border-box; page-break-inside: avoid; }
+      .print-part { font-size: 20px; font-weight: bold; margin-bottom: 4px; font-family: monospace; }
+      .print-loc { font-size: 13px; font-weight: bold; margin-bottom: 4px; border: 1px solid #000; padding: 1px 6px; border-radius: 3px; display: inline-block; }
+      .print-desc { font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: auto; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .barcode-wrapper { margin-top: 6px; width: 100%; display: flex; justify-content: center; }
+      .barcode-wrapper svg { max-height: 60px; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-notification">Notification message</div>
+
+  <!-- CAMERA SCANNER MODAL -->
+  <div id="scanner-modal">
+    <div id="reader"></div>
+    <button class="btn-close-scanner" onclick="stopScanner()">Cancel Scan</button>
+  </div>
+
+  <!-- IN-APP CUSTOM CONFIRMATION MODAL -->
+  <div id="custom-confirm-modal">
+    <div class="prompt-card">
+      <h3 class="prompt-title" id="confirm-modal-title">Confirm Action</h3>
+      <p id="confirm-modal-message" style="margin: 0; font-size: 14px; color: #444; line-height: 1.4;">Are you sure?</p>
+      <div class="prompt-buttons">
+        <button class="btn-prompt-cancel" id="confirm-btn-no">Cancel</button>
+        <button class="btn-prompt-save" id="confirm-btn-yes" style="background: var(--danger);">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATABASE SEARCH MODAL -->
+  <div id="search-modal">
+    <div class="search-modal-content">
+      <div class="job-modal-header">
+        <h2 class="job-modal-title">🔍 Search Part Database</h2>
+      </div>
+      <div class="prompt-group" style="margin-bottom: 10px;">
+        <label for="search-input-box">Search by Part Number or Description (e.g. thermostat)</label>
+        <input type="text" id="search-input-box" placeholder="Type keyword..." oninput="performDatabaseSearch(this.value)">
+      </div>
+      <div class="search-results-list" id="search-results-container">
+        <div class="empty-state">Type a keyword above to search your personal database...</div>
+      </div>
+      <button class="btn-close-modal" onclick="closeSearchModal()">Close Search</button>
+    </div>
+  </div>
+
+  <!-- IN-APP JOB CARD PROMPT MODAL -->
+  <div id="job-prompt-modal">
+    <div class="prompt-card">
+      <h3 class="prompt-title" id="prompt-modal-title">Save Job Card</h3>
+      
+      <div class="prompt-group">
+        <label for="modal-job-no">Job / Bus Number *</label>
+        <input type="text" id="modal-job-no" placeholder="e.g. 5013">
+      </div>
+
+      <div class="prompt-group">
+        <label for="modal-job-desc">Job Description (Optional)</label>
+        <input type="text" id="modal-job-desc" placeholder="e.g. COMPRESSOR">
+      </div>
+
+      <div class="prompt-buttons">
+        <button class="btn-prompt-cancel" onclick="closeJobPromptModal()">Cancel</button>
+        <button class="btn-prompt-save" onclick="submitJobPromptModal()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMBEDDED USER GUIDE MODAL -->
+  <div id="guide-modal">
+    <div class="job-modal-content">
+      <div class="job-modal-header">
+        <h2 class="job-modal-title">📖 Part Picker User Guide</h2>
+      </div>
+
+      <div class="guide-body">
+        <div>Welcome to <strong>Part Picker</strong>, your mobile-first inventory and job card companion. This guide explains how to scan, search, manage job cards, load templates, and zap barcodes at your computer terminal.</div>
+
+        <h3>1. Getting Started & Searching</h3>
+        <ul>
+          <li><strong>Database Search:</strong> Tap <strong>🔍 Search Database</strong> at the top to instantly search your entire history, saved jobs, and templates for terms like "thermostat" or "filter".</li>
+          <li><strong>Camera Scanning:</strong> Tap <strong>📷 Scan</strong>, point your camera at any 1D barcode or orange shelf label.</li>
+        </ul>
+
+        <h3>2. Adding Parts & Templates</h3>
+        <ul>
+          <li><strong>Templates to Job Cards:</strong> Under <strong>My Template Groups</strong>, tap <strong>Load to List</strong> to instantly load a saved template into your active scan list, then tap **Save to Job Card**.</li>
+          <li><strong>Locations:</strong> Each part displays its bin location (e.g. <code>3A2</code>) so you can easily locate it in the store.</li>
+        </ul>
+
+        <h3>3. Active List & Terminal Integration</h3>
+        <ul>
+          <li><strong>Screen Barcodes:</strong> Open any saved Job Card or Template, tap <strong>📱 Screen Barcodes</strong>, and zap each large barcode directly off your phone screen using your wireless Zebra scanner.</li>
+        </ul>
+      </div>
+
+      <button class="btn-close-modal" onclick="closeGuideModal()">Close Guide</button>
+    </div>
+  </div>
+
+  <!-- VIEWER MODAL (List OR Swipeable Screen Barcode Carousel) -->
+  <div id="job-modal">
+    <div class="job-modal-content">
+      <div class="job-modal-header">
+        <div>
+          <h2 class="job-modal-title" id="job-modal-title">Reference</h2>
+          <span class="job-modal-date" id="job-modal-date">Date</span>
+        </div>
+      </div>
+
+      <div class="job-modal-tabs">
+        <button class="tab-btn active" id="tab-btn-list" onclick="switchJobTab('list')">📝 Part List</button>
+        <button class="tab-btn" id="tab-btn-barcode" onclick="switchJobTab('barcode')">📱 Screen Barcodes</button>
+      </div>
+
+      <!-- Tab 1: Standard Part List View -->
+      <div class="tab-content" id="tab-content-list">
+        <div id="job-modal-list"></div>
+      </div>
+
+      <!-- Tab 2: Screen Swipeable 1D Barcode Carousel -->
+      <div class="tab-content" id="tab-content-barcode">
+        <div class="carousel-container">
+          <div class="carousel-card">
+            <div class="carousel-part" id="carousel-part-no">PART-001</div>
+            <div id="carousel-loc-container"><span class="carousel-loc" id="carousel-loc">3A2</span></div>
+            <div class="carousel-desc" id="carousel-part-desc">DESCRIPTION HERE</div>
+            <div class="carousel-barcode-box">
+              <svg id="carousel-barcode-svg"></svg>
+            </div>
+          </div>
+          
+          <div class="carousel-nav">
+            <button class="btn-carousel" id="carousel-prev" onclick="navigateCarousel(-1)">◀ Prev</button>
+            <span class="carousel-counter" id="carousel-counter">1 of 5</span>
+            <button class="btn-carousel" id="carousel-next" onclick="navigateCarousel(1)">Next ▶</button>
+          </div>
+          
+          <div style="font-size: 12px; color: #666; margin-top: 5px; text-align: center;">
+            Zap each barcode with your Zebra scanner at the computer terminal.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-close-modal" onclick="closeJobModal()">Close Viewer</button>
+    </div>
+  </div>
+
+  <!-- MOBILE UI -->
+  <div class="app-container">
+    <h1>Part Picker</h1>
+    
+    <!-- EMBEDDED USER GUIDE & SEARCH BUTTONS -->
+    <button class="btn-search-top" onclick="openSearchModal()">🔍 Search Database</button>
+    <button class="btn-guide-top" onclick="openGuideModal()">📖 User Guide & Instructions</button>
+    
+    <div class="input-card" id="input-card">
+      <!-- Top Row: Part Number, Location, Scan Button -->
+      <div class="input-row-top">
+        <div class="part-col">
+          <label for="partNo">Part Number</label>
+          <input type="text" id="partNo" placeholder="" oninput="lookupPartData(this.value)">
+        </div>
+        <div class="loc-col">
+          <label for="loc">Location</label>
+          <input type="text" id="loc" placeholder="" maxlength="10">
+        </div>
+        <div class="scan-col">
+          <label>&nbsp;</label>
+          <button class="btn-scan-trigger" onclick="startScanner()" type="button">📷 Scan</button>
+        </div>
+      </div>
+      
+      <!-- Second Row: Item Description (Large Box) -->
+      <div class="input-row">
+        <label for="desc">Item Description</label>
+        <input type="text" id="desc" placeholder="">
+      </div>
+
+      <!-- Third Row: Qty & Add Button -->
+      <div class="input-row-split">
+        <div class="qty-container">
+          <label for="itemQty">Qty</label>
+          <input type="number" id="itemQty" value="1" min="1" max="999">
+        </div>
+        <div style="flex-grow: 1;">
+          <button class="btn" id="add-btn" onclick="addOrUpdateLabel()">Add to List</button>
+        </div>
+      </div>
+
+      <div class="button-group" style="margin-top: 10px;">
+        <button class="btn btn-cancel" id="cancel-btn" onclick="cancelEdit()">Cancel Edit</button>
+      </div>
+    </div>
+
+    <!-- Active List Section -->
+    <div class="list-header">
+      <span>Active Scan List</span>
+      <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="count-badge">0</span>
+    </div>
+    
+    <!-- Workbench Editing Banner -->
+    <div id="editing-banner" class="editing-banner" style="display: none;">
+      <div class="editing-banner-header">
+        <span class="editing-banner-title" id="editing-banner-text">Editing Job/Template...</span>
+        <button class="btn-banner-rename" onclick="openJobPromptModal('rename')">Rename</button>
+      </div>
+      <div style="display:flex; gap: 8px;">
+        <button class="btn-banner-cancel" onclick="cancelContextEdit()">Cancel Edits</button>
+        <button class="btn-banner-save" onclick="saveContextChanges()">Save Changes</button>
+      </div>
+    </div>
+
+    <div class="scanned-list">
+      <div id="list">
+        <div class="empty-state" id="empty-state">No parts scanned yet.</div>
+      </div>
+    </div>
+
+    <!-- Main Actions -->
+    <div id="action-buttons" style="display: none;">
+      <button class="btn btn-job-save" onclick="openJobPromptModal('save')">Save to Job Card</button>
+      <button class="btn btn-group-init" onclick="showActiveListBarcodes()">📱 Screen Barcodes</button>
+      <button class="btn btn-clear" onclick="clearAllLabels()">Clear Active List</button>
+    </div>
+
+    <!-- Job Cards Section (Collapsible) -->
+    <div class="groups-section job-section" id="jobs-section" style="display: none;">
+      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; cursor: pointer;" onclick="toggleJobs()">
+        <span id="jobs-title-text">My Saved Job Cards ▾</span>
+        <span style="background: var(--info); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="jobs-count-badge">0</span>
+      </div>
+      <div class="scanned-list" id="jobs-list-container" style="display: none; background: transparent; box-shadow: none; margin-bottom: 0;">
+        <div id="jobs-list">
+          <!-- Job Cards render here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Saved Template Groups Section (Collapsible) -->
+    <div class="groups-section" id="groups-section" style="display: none;">
+      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+        <span id="groups-title-text" onclick="toggleGroups()" style="cursor: pointer; flex-grow: 1;">My Template Groups ▾</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px;" id="groups-count-badge">0</span>
+          <button class="btn-action edit" onclick="saveActiveListAsTemplate()" style="font-weight:bold; border-color:var(--primary); color:var(--primary); padding: 4px 10px;">+ Save Current List</button>
+        </div>
+      </div>
+      <div class="scanned-list" id="groups-list-container" style="display: none; background: transparent; box-shadow: none; margin-bottom: 0;">
+        <div id="groups-list">
+          <!-- Groups render here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan History Section -->
+    <div class="groups-section" id="history-section" style="display: none;">
+      <div class="list-header" style="margin-top:0; display:flex; justify-content:space-between; align-items:center; cursor: pointer;" onclick="toggleHistory()">
+        <span id="history-title-text">Scan History (Last 25) ▾</span>
+        <button class="btn-action remove" onclick="event.stopPropagation(); clearHistory();" style="font-weight:normal; border-color:transparent;">Clear All</button>
+      </div>
+      <div class="scanned-list" id="history-list" style="display: none;">
+        <!-- History renders here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT UI -->
+  <div id="print-layout"></div>
+
+  <script>
+    let labels = [];
+    let savedGroups = [];
+    let savedJobs = [];
+    let scanHistory = [];
+    let editingId = null;
+    let contextEditing = null;
+    let html5QrCode = null;
+    let promptMode = 'save'; // 'save' or 'rename'
+    
+    // Carousel state & toggle states (with localStorage persistence)
+    let carouselItems = [];
+    let carouselIndex = 0;
+    let historyExpanded = JSON.parse(localStorage.getItem('historyExpanded')) || false;
+    let jobsExpanded = JSON.parse(localStorage.getItem('jobsExpanded')) || false;
+    let groupsExpanded = JSON.parse(localStorage.getItem('groupsExpanded')) || false;
+
+    // Toast Notification helper
+    function showNotification(msg) {
+      const toast = document.getElementById('toast-notification');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
+    // Custom In-App Confirmation Modal replacement for confirm()
+    function showCustomConfirm(message, onConfirm) {
+      const modal = document.getElementById('custom-confirm-modal');
+      document.getElementById('confirm-modal-message').innerText = message;
+      modal.style.display = 'flex';
+
+      const btnYes = document.getElementById('confirm-btn-yes');
+      const btnNo = document.getElementById('confirm-btn-no');
+
+      // Clear previous listeners
+      const newBtnYes = btnYes.cloneNode(true);
+      const newBtnNo = btnNo.cloneNode(true);
+      btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+      btnNo.parentNode.replaceChild(newBtnNo, btnNo);
+
+      newBtnYes.addEventListener('click', () => {
+        modal.style.display = 'none';
+        onConfirm();
+      });
+      newBtnNo.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+    }
+
+    // Initialization
+    window.onload = () => {
+      const rawLabels = JSON.parse(localStorage.getItem('savedBarcodeLabels')) || [];
+      labels = rawLabels.map(label => ({
+        id: label.id,
+        desc: label.desc,
+        loc: (label.loc || '').toUpperCase().replace(/[^A-Z0-9\-]/g, ''),
+        partNo: label.partNo.toUpperCase().replace(/[^A-Z0-9\-]/g, ''),
+        qty: parseInt(label.qty) || 1,
+        oos: label.oos || false
+      }));
+      
+      savedGroups = JSON.parse(localStorage.getItem('savedBarcodeGroups')) || [];
+      savedJobs = JSON.parse(localStorage.getItem('savedJobCards')) || [];
+      
+      let rawHistory = JSON.parse(localStorage.getItem('scanHistoryList')) || [];
+      scanHistory = rawHistory.slice(0, 25);
+      
+      contextEditing = JSON.parse(localStorage.getItem('editingContext')) || null;
+
+      saveData();
+      saveGroupsData();
+      saveJobsData();
+      saveHistoryData();
+
+      document.getElementById('partNo').value = "";
+      document.getElementById('loc').value = "";
+      document.getElementById('desc').value = "";
+      document.getElementById('itemQty').value = "1";
+      
+      renderUI();
+      
+      document.getElementById('partNo').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('loc').focus(); }
+      });
+      document.getElementById('loc').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('desc').focus(); }
+      });
+      document.getElementById('desc').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('itemQty').focus(); }
+      });
+      document.getElementById('itemQty').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); addOrUpdateLabel(); }
+      });
+    };
+
+    function toggleHistory() {
+      historyExpanded = !historyExpanded;
+      localStorage.setItem('historyExpanded', JSON.stringify(historyExpanded));
+      const historyList = document.getElementById('history-list');
+      const titleText = document.getElementById('history-title-text');
+      historyList.style.display = historyExpanded ? 'block' : 'none';
+      titleText.innerText = `Scan History (Last 25) ${historyExpanded ? '▴' : '▾'}`;
+    }
+
+    function toggleJobs() {
+      jobsExpanded = !jobsExpanded;
+      localStorage.setItem('jobsExpanded', JSON.stringify(jobsExpanded));
+      const jobsListContainer = document.getElementById('jobs-list-container');
+      const titleText = document.getElementById('jobs-title-text');
+      jobsListContainer.style.display = jobsExpanded ? 'block' : 'none';
+      titleText.innerText = `My Saved Job Cards ${jobsExpanded ? '▴' : '▾'}`;
+    }
+
+    function toggleGroups() {
+      groupsExpanded = !groupsExpanded;
+      localStorage.setItem('groupsExpanded', JSON.stringify(groupsExpanded));
+      const groupsListContainer = document.getElementById('groups-list-container');
+      const titleText = document.getElementById('groups-title-text');
+      groupsListContainer.style.display = groupsExpanded ? 'block' : 'none';
+      titleText.innerText = `My Template Groups ${groupsExpanded ? '▴' : '▾'}`;
+    }
+
+    // --- DATABASE SEARCH MODAL CONTROLS ---
+    function openSearchModal() {
+      document.getElementById('search-modal').style.display = 'flex';
+      document.getElementById('search-input-box').value = '';
+      document.getElementById('search-results-container').innerHTML = '<div class="empty-state">Type a keyword above to search your personal database...</div>';
+      document.getElementById('search-input-box').focus();
+    }
+
+    function closeSearchModal() {
+      document.getElementById('search-modal').style.display = 'none';
+    }
+
+    function performDatabaseSearch(queryText) {
+      const query = queryText.trim().toUpperCase();
+      const container = document.getElementById('search-results-container');
+      container.innerHTML = '';
+
+      if (!query) {
+        container.innerHTML = '<div class="empty-state">Type a keyword above to search your personal database...</div>';
+        return;
+      }
+
+      // Aggregate all unique parts from scan history, jobs, and templates
+      const matchedPartsMap = new Map();
+
+      // Search History
+      scanHistory.forEach(h => {
+        if (h.partNo.includes(query) || (h.desc && h.desc.toUpperCase().includes(query))) {
+          matchedPartsMap.set(h.partNo, { partNo: h.partNo, desc: h.desc || '', loc: h.loc || '' });
+        }
+      });
+
+      // Search Jobs
+      savedJobs.forEach(job => {
+        job.items.forEach(item => {
+          if (item.partNo.includes(query) || (item.desc && item.desc.toUpperCase().includes(query))) {
+            matchedPartsMap.set(item.partNo, { partNo: item.partNo, desc: item.desc || '', loc: item.loc || '' });
+          }
+        });
+      });
+
+      // Search Templates
+      savedGroups.forEach(group => {
+        group.items.forEach(item => {
+          if (item.partNo.includes(query) || (item.desc && item.desc.toUpperCase().includes(query))) {
+            matchedPartsMap.set(item.partNo, { partNo: item.partNo, desc: item.desc || '', loc: item.loc || '' });
+          }
+        });
+      });
+
+      const results = Array.from(matchedPartsMap.values());
+
+      if (results.length === 0) {
+        container.innerHTML = `<div class="empty-state">No matching parts found for "${queryText}".</div>`;
+        return;
+      }
+
+      results.forEach(res => {
+        const safeDesc = res.desc.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+        const safeLoc = res.loc.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+        container.innerHTML += `
+          <div class="scanned-item">
+            <div class="item-part-line">${res.partNo}</div>
+            <div class="item-desc-line">${res.loc ? '<span class="loc-badge">📍 ' + res.loc + '</span>' : ''} ${res.desc || 'No description'}</div>
+            <div class="item-footer-row">
+              <span style="font-size: 11px; color: #888;">Database Match</span>
+              <div class="item-actions">
+                <button class="btn-action edit" onclick="addFromSearch('${res.partNo}', '${safeDesc}', '${safeLoc}')">Add to List</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function addFromSearch(partNo, desc, loc) {
+      document.getElementById('partNo').value = partNo;
+      document.getElementById('loc').value = loc || '';
+      document.getElementById('desc').value = desc;
+      document.getElementById('itemQty').value = "1";
+      addOrUpdateLabel();
+      closeSearchModal();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showNotification(`Added ${partNo} from database search!`);
+    }
+
+    // --- USER GUIDE MODAL CONTROLS ---
+    function openGuideModal() {
+      document.getElementById('guide-modal').style.display = 'flex';
+    }
+
+    function closeGuideModal() {
+      document.getElementById('guide-modal').style.display = 'none';
+    }
+
+    // --- AUTO-LOOKUP DESCRIPTION & LOCATION LOGIC ---
+    function lookupPartData(val) {
+      const cleanPart = val.toUpperCase().replace(/[^A-Z0-9\-]/g, '').trim();
+      if (!cleanPart) return;
+
+      const descInput = document.getElementById('desc');
+      const locInput = document.getElementById('loc');
+      
+      let foundDesc = null;
+      let foundLoc = null;
+
+      const histMatch = scanHistory.find(h => h.partNo === cleanPart);
+      if (histMatch) { 
+        if (histMatch.desc && !descInput.value.trim()) foundDesc = histMatch.desc;
+        if (histMatch.loc && !locInput.value.trim()) foundLoc = histMatch.loc;
+      }
+
+      if (!foundDesc || !foundLoc) {
+        for (const job of savedJobs) {
+          const itemMatch = job.items.find(i => i.partNo === cleanPart);
+          if (itemMatch) {
+            if (!foundDesc && itemMatch.desc) foundDesc = itemMatch.desc;
+            if (!foundLoc && itemMatch.loc) foundLoc = itemMatch.loc;
+            if (foundDesc && foundLoc) break;
+          }
+        }
+      }
+
+      if (!foundDesc || !foundLoc) {
+        for (const group of savedGroups) {
+          const itemMatch = group.items.find(i => i.partNo === cleanPart);
+          if (itemMatch) {
+            if (!foundDesc && itemMatch.desc) foundDesc = itemMatch.desc;
+            if (!foundLoc && itemMatch.loc) foundLoc = itemMatch.loc;
+            if (foundDesc && foundLoc) break;
+          }
+        }
+      }
+
+      if (foundDesc && !descInput.value.trim()) descInput.value = foundDesc;
+      if (foundLoc && !locInput.value.trim()) locInput.value = foundLoc;
+    }
+
+    // --- CAMERA SCANNER (With BarcodeDetector for Orange Labels) ---
+    function startScanner() {
+      const modal = document.getElementById('scanner-modal');
+      modal.style.display = 'flex';
+
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { 
+        fps: 20, 
+        qrbox: { width: 320, height: 160 },
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        },
+        formatsToSupport: [ 
+          Html5QrcodeSupportedFormats.CODE_128, 
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.UPC_A
+        ]
+      };
+
+      html5QrCode.start({ facingMode: "environment" }, config, 
+        (decodedText) => {
+          stopScanner(); 
+          const cleanText = decodedText.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+          const partInput = document.getElementById('partNo');
+          partInput.value = cleanText;
+          lookupPartData(cleanText);
+
+          if (navigator.vibrate) navigator.vibrate(100);
+          document.getElementById('loc').focus();
+        },
+        (errorMessage) => {}
+      ).catch((err) => {
+        console.error("Camera error:", err);
+        showNotification("Unable to access camera. Please allow camera permissions in browser settings.");
+        stopScanner();
+      });
+    }
+
+    function stopScanner() {
+      const modal = document.getElementById('scanner-modal');
+      modal.style.display = 'none';
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(err => console.error(err));
+      }
+    }
+
+    // --- ADD or UPDATE Label (Newest first) ---
+    function addOrUpdateLabel() {
+      const partNoInput = document.getElementById('partNo');
+      const locInput = document.getElementById('loc');
+      const descInput = document.getElementById('desc');
+      const qtyInput = document.getElementById('itemQty');
+      
+      const partNo = partNoInput.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+      const loc = locInput.value.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+      const desc = descInput.value.trim().toUpperCase();
+      const qty = parseInt(qtyInput.value) || 1;
+
+      if(!partNo) { showNotification("Please enter a valid part number."); partNoInput.focus(); return; }
+      if(!desc) { showNotification("Please enter an item description."); descInput.focus(); return; }
+
+      if (editingId) {
+        const index = labels.findIndex(l => l.id === editingId);
+        if(index > -1) { 
+          labels[index].partNo = partNo; 
+          labels[index].loc = loc;
+          labels[index].desc = desc; 
+          labels[index].qty = qty; 
+          // Move edited item to top
+          const item = labels.splice(index, 1)[0];
+          labels.unshift(item);
+        }
+        cancelEdit(); 
+      } else {
+        const existingIndex = labels.findIndex(l => l.partNo === partNo);
+        if (existingIndex > -1) {
+          labels[existingIndex].qty += qty;
+          if (desc) labels[existingIndex].desc = desc;
+          if (loc) labels[existingIndex].loc = loc;
+          // Move existing item to the top of the active list
+          const item = labels.splice(existingIndex, 1)[0];
+          labels.unshift(item);
+        } else {
+          labels.unshift({ id: Date.now().toString(), partNo: partNo, loc: loc, desc: desc, qty: qty, oos: false });
+        }
+        addToHistory(partNo, desc, loc);
+      }
+
+      saveData();
+      partNoInput.value = ""; 
+      locInput.value = "";
+      descInput.value = ""; 
+      qtyInput.value = "1";
+      partNoInput.focus();
+      renderUI();
+    }
+
+    function editLabel(id) {
+      const label = labels.find(l => l.id === id);
+      if(!label) return;
+      editingId = id;
+      document.getElementById('partNo').value = label.partNo;
+      document.getElementById('loc').value = label.loc || '';
+      document.getElementById('desc').value = label.desc;
+      document.getElementById('itemQty').value = label.qty || 1;
+      
+      document.getElementById('input-card').classList.add('editing');
+      const addBtn = document.getElementById('add-btn');
+      addBtn.innerText = "Update Label"; addBtn.classList.add('btn-update');
+      document.getElementById('cancel-btn').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      document.getElementById('partNo').value = ""; 
+      document.getElementById('loc').value = "";
+      document.getElementById('desc').value = ""; 
+      document.getElementById('itemQty').value = "1";
+      document.getElementById('input-card').classList.remove('editing');
+      const addBtn = document.getElementById('add-btn');
+      addBtn.innerText = "Add to List"; addBtn.classList.remove('btn-update');
+      document.getElementById('cancel-btn').style.display = 'none';
+    }
+
+    function adjustQty(id, amount) {
+      const label = labels.find(l => l.id === id);
+      if (label) {
+        label.qty = Math.max(1, (parseInt(label.qty) || 1) + amount);
+        saveData();
+        renderUI();
+      }
+    }
+
+    function removeLabel(id) { labels = labels.filter(label => label.id !== id); saveData(); renderUI(); }
+    
+    function toggleOOS(id) {
+      const label = labels.find(l => l.id === id);
+      if(label) {
+        label.oos = !label.oos;
+        saveData();
+        renderUI();
+      }
+    }
+
+    function clearAllLabels() {
+      showCustomConfirm("Are you sure you want to clear the active list?", () => {
+        labels = [];
+        saveData();
+        renderUI();
+        showNotification("Active list cleared.");
+      });
+    }
+
+    function addToHistory(partNo, desc, loc) {
+      scanHistory = scanHistory.filter(h => h.partNo !== partNo);
+      
+      scanHistory.unshift({
+        id: 'hist_' + Date.now().toString(),
+        partNo: partNo,
+        desc: desc,
+        loc: loc,
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString()
+      });
+      
+      if (scanHistory.length > 25) { scanHistory = scanHistory.slice(0, 25); }
+      saveHistoryData();
+    }
+
+    function addFromHistory(partNo, desc, loc) {
+      document.getElementById('partNo').value = partNo;
+      document.getElementById('loc').value = loc || '';
+      document.getElementById('desc').value = desc;
+      document.getElementById('itemQty').value = "1";
+      addOrUpdateLabel();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearHistory() {
+      showCustomConfirm("Are you sure you want to clear your entire scan history?", () => {
+        scanHistory = [];
+        saveHistoryData();
+        renderUI();
+        showNotification("Scan history cleared.");
+      });
+    }
+
+    // --- WORKBENCH CONTEXT EDITING & TEMPLATE LOADING ---
+    function loadContextToWorkbench(type, id) {
+      const proceedAction = () => {
+        let sourceItem = null;
+        if (type === 'job') sourceItem = savedJobs.find(j => j.id === id);
+        if (type === 'group') sourceItem = savedGroups.find(g => g.id === id);
+
+        if (!sourceItem) return;
+
+        contextEditing = { 
+          type: type, 
+          id: id, 
+          name: sourceItem.jobNo || sourceItem.name, 
+          description: sourceItem.description || '' 
+        };
+        localStorage.setItem('editingContext', JSON.stringify(contextEditing));
+
+        labels = sourceItem.items.map(item => ({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+          partNo: item.partNo,
+          loc: item.loc || '',
+          desc: item.desc,
+          qty: parseInt(item.qty) || 1,
+          oos: item.oos || false
+        }));
+
+        saveData();
+        renderUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showNotification(`Loaded "${contextEditing.name}" into active list.`);
+      };
+
+      if (labels.length > 0) {
+        showCustomConfirm("Warning: Loading this will clear your current active list. Do you want to proceed?", proceedAction);
+      } else {
+        proceedAction();
+      }
+    }
+
+    // PURELY for Templates: Load template directly into active list to save to a job card
+    function loadTemplateToList(groupId) {
+      const template = savedGroups.find(g => g.id === groupId);
+      if (!template) return;
+
+      const proceedAction = () => {
+        // Clear current active list and load template items fresh
+        labels = template.items.map(item => ({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+          partNo: item.partNo,
+          loc: item.loc || '',
+          desc: item.desc,
+          qty: parseInt(item.qty) || 1,
+          oos: false
+        }));
+
+        // Reset context editing so it behaves as a fresh active list ready to save to a new job card
+        contextEditing = null;
+        localStorage.removeItem('editingContext');
+
+        saveData();
+        renderUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showNotification(`Template "${template.name}" loaded into active list! You can now save it as a Job Card.`);
+      };
+
+      if (labels.length > 0) {
+        showCustomConfirm(`Load template "${template.name}" into your active list? This will replace your current active parts.`, proceedAction);
+      } else {
+        proceedAction();
+      }
+    }
+
+    function openJobPromptModal(mode) {
+      if (mode === 'save' && labels.length === 0) {
+        showNotification("Your active list is empty. Scan some parts first!");
+        return;
+      }
+      
+      promptMode = mode;
+      const modal = document.getElementById('job-prompt-modal');
+      const titleEl = document.getElementById('prompt-modal-title');
+      const jobNoInput = document.getElementById('modal-job-no');
+      const jobDescInput = document.getElementById('modal-job-desc');
+
+      if (mode === 'rename' && contextEditing) {
+        titleEl.innerText = "Edit Job Details";
+        jobNoInput.value = contextEditing.name || "";
+        jobDescInput.value = contextEditing.description || "";
+      } else {
+        titleEl.innerText = "Save Job Card";
+        jobNoInput.value = "";
+        jobDescInput.value = "";
+      }
+
+      modal.style.display = 'flex';
+      jobNoInput.focus();
+    }
+
+    function closeJobPromptModal() {
+      document.getElementById('job-prompt-modal').style.display = 'none';
+    }
+
+    function submitJobPromptModal() {
+      const jobNoInput = document.getElementById('modal-job-no');
+      const jobDescInput = document.getElementById('modal-job-desc');
+      
+      const jobNo = jobNoInput.value.trim().toUpperCase();
+      const jobDesc = jobDescInput.value.trim().toUpperCase();
+
+      if (!jobNo) {
+        showNotification("Please enter a Job / Bus Number.");
+        jobNoInput.focus();
+        return;
+      }
+
+      closeJobPromptModal();
+
+      if (promptMode === 'rename' && contextEditing) {
+        contextEditing.name = jobNo;
+        contextEditing.description = jobDesc;
+        localStorage.setItem('editingContext', JSON.stringify(contextEditing));
+        renderUI();
+        showNotification(`Job details updated successfully!`);
+      } else {
+        const newJob = {
+          id: "job_" + Date.now().toString(),
+          jobNo: jobNo,
+          description: jobDesc,
+          date: new Date().toLocaleDateString(),
+          items: labels.map(l => ({ partNo: l.partNo, loc: l.loc || '', desc: l.desc, qty: l.qty || 1, oos: l.oos }))
+        };
+
+        savedJobs.unshift(newJob);
+        saveJobsData();
+        showNotification(`Job "${newJob.jobNo}" saved successfully!`);
+        
+        showCustomConfirm(`Job "${newJob.jobNo}" saved! Clear the active list to start your next job?`, () => {
+          labels = [];
+          contextEditing = null;
+          localStorage.removeItem('editingContext');
+          saveData();
+          renderUI();
+        });
+        renderUI();
+      }
+    }
+
+    function saveContextChanges() {
+      if (!contextEditing) return;
+      if (labels.length === 0) {
+        showNotification("The list is empty. If you want to delete this entirely, please use the Delete button.");
+        return;
+      }
+
+      const updatedItems = labels.map(l => ({ partNo: l.partNo, loc: l.loc || '', desc: l.desc, qty: l.qty || 1, oos: l.oos }));
+
+      if (contextEditing.type === 'job') {
+        const idx = savedJobs.findIndex(j => j.id === contextEditing.id);
+        if(idx > -1) { 
+          savedJobs[idx].items = updatedItems; 
+          savedJobs[idx].jobNo = contextEditing.name; 
+          savedJobs[idx].description = contextEditing.description; 
+        }
+        saveJobsData();
+      } else if (contextEditing.type === 'group') {
+        const idx = savedGroups.findIndex(g => g.id === contextEditing.id);
+        if(idx > -1) { 
+          savedGroups[idx].items = updatedItems; 
+          savedGroups[idx].name = contextEditing.name; 
+        }
+        saveGroupsData();
+      }
+
+      showNotification(`${contextEditing.type === 'job' ? 'Job Card' : 'Template'} "${contextEditing.name}" updated successfully!`);
+      
+      contextEditing = null;
+      localStorage.removeItem('editingContext');
+      labels = [];
+      saveData();
+      renderUI();
+    }
+
+    function cancelContextEdit() {
+      showCustomConfirm("Are you sure you want to cancel? Any changes made to this list will NOT be saved.", () => {
+        contextEditing = null;
+        localStorage.removeItem('editingContext');
+        labels = [];
+        saveData();
+        renderUI();
+        showNotification("Edits cancelled.");
+      });
+    }
+
+    // --- VIEWERS & CAROUSELS ---
+    function viewJob(id) {
+      const job = savedJobs.find(j => j.id === id);
+      if(!job) return;
+      const jobNoStr = job.jobNo || job.name || 'JOB';
+      const title = job.description ? `${jobNoStr} - ${job.description}` : jobNoStr;
+      openModal(title, job.date, job.items, 'list');
+    }
+
+    function showActiveListBarcodes() {
+      if(labels.length === 0) { showNotification("Your active list is empty. Scan some parts first!"); return; }
+      openModal("ACTIVE LIST", new Date().toLocaleDateString(), labels, 'barcode');
+    }
+
+    function viewGroupBarcodes(groupId) {
+      const group = savedGroups.find(g => g.id === groupId);
+      if(!group) return;
+      openModal(group.name, "TEMPLATE GROUP", group.items, 'barcode');
+    }
+
+    function openModal(title, dateStr, items, defaultTab = 'list') {
+      document.getElementById('job-modal-title').innerText = title;
+      document.getElementById('job-modal-date').innerText = dateStr;
+      
+      carouselItems = items;
+      carouselIndex = 0;
+      
+      const listContainer = document.getElementById('job-modal-list');
+      listContainer.innerHTML = '';
+      
+      items.forEach(item => {
+        const oosBadge = item.oos ? '<span class="oos-badge">ON ORDER</span>' : '';
+        const locBadge = item.loc ? `<span class="loc-badge">📍 ${item.loc}</span>` : '';
+        const qtyDisplay = (item.qty && item.qty > 1) ? ` <span style="background:#e2e8f0; padding:1px 6px; border-radius:8px; font-size:12px;">x${item.qty}</span>` : '';
+        listContainer.innerHTML += `
+          <div class="job-modal-item">
+            <span class="job-modal-part">${item.partNo} ${qtyDisplay}</span>
+            <span class="job-modal-desc">${oosBadge}${locBadge} ${item.desc || 'No description'}</span>
+          </div>
+        `;
+      });
+
+      switchJobTab(defaultTab);
+      document.getElementById('job-modal').style.display = 'flex';
+    }
+
+    function switchJobTab(tabName) {
+      const btnList = document.getElementById('tab-btn-list');
+      const btnBarcode = document.getElementById('tab-btn-barcode');
+      const contentList = document.getElementById('tab-content-list');
+      const contentBarcode = document.getElementById('tab-content-barcode');
+
+      if (tabName === 'list') {
+        btnList.classList.add('active');
+        btnBarcode.classList.remove('active');
+        contentList.classList.add('active');
+        contentBarcode.classList.remove('active');
+      } else {
+        btnList.classList.remove('active');
+        btnBarcode.classList.add('active');
+        contentList.classList.remove('active');
+        contentBarcode.classList.add('active');
+
+        renderCarouselItem();
+      }
+    }
+
+    function navigateCarousel(direction) {
+      carouselIndex += direction;
+      if (carouselIndex < 0) carouselIndex = 0;
+      if (carouselIndex >= carouselItems.length) carouselIndex = carouselItems.length - 1;
+      renderCarouselItem();
+    }
+
+    function renderCarouselItem() {
+      if (!carouselItems || carouselItems.length === 0) return;
+
+      const currentItem = carouselItems[carouselIndex];
+      document.getElementById('carousel-part-no').innerText = currentItem.partNo;
+      
+      const locContainer = document.getElementById('carousel-loc-container');
+      if (currentItem.loc) {
+        locContainer.innerHTML = `<span class="carousel-loc" id="carousel-loc">📍 LOC: ${currentItem.loc}</span>`;
+        locContainer.style.display = 'block';
+      } else {
+        locContainer.style.display = 'none';
+      }
+
+      document.getElementById('carousel-part-desc').innerText = (currentItem.oos ? '[ON ORDER] ' : '') + (currentItem.desc || 'NO DESCRIPTION');
+      document.getElementById('carousel-counter').innerText = `${carouselIndex + 1} of ${carouselItems.length}`;
+
+      document.getElementById('carousel-prev').disabled = (carouselIndex === 0);
+      document.getElementById('carousel-next').disabled = (carouselIndex === carouselItems.length - 1);
+
+      try {
+        JsBarcode("#carousel-barcode-svg", currentItem.partNo, {
+          format: "CODE128",
+          lineColor: "#000",
+          width: 2.5,
+          height: 80,
+          displayValue: true,
+          fontSize: 16,
+          fontOptions: "bold",
+          margin: 5
+        });
+      } catch(e) {
+        console.error("Barcode generation error:", e);
+      }
+    }
+
+    function closeJobModal() { 
+      document.getElementById('job-modal').style.display = 'none'; 
+      carouselItems = [];
+      carouselIndex = 0;
+    }
+
+    function deleteJob(id) {
+      showCustomConfirm("Are you sure you want to delete this completed Job Card?", () => {
+        savedJobs = savedJobs.filter(j => j.id !== id);
+        saveJobsData();
+        renderUI();
+        showNotification("Job card deleted.");
+      });
+    }
+
+    function saveActiveListAsTemplate() {
+      if(labels.length === 0) { showNotification("Your active list is empty. Scan some parts first!"); return; }
+      
+      const groupName = prompt("Enter a name for this template (e.g. 'Standard Service Kit'):", "");
+      if(groupName === null) return;
+      if(groupName.trim() === "") return;
+
+      const newGroup = {
+        id: "group_" + Date.now().toString(),
+        name: groupName.trim().toUpperCase(),
+        items: labels.map(l => ({ partNo: l.partNo, loc: l.loc || '', desc: l.desc, qty: l.qty || 1, oos: false }))
+      };
+
+      savedGroups.unshift(newGroup);
+      saveGroupsData();
+      renderUI();
+      showNotification(`Template "${newGroup.name}" saved successfully!`);
+    }
+
+    function deleteGroup(groupId) {
+      showCustomConfirm("Delete this saved template permanently?", () => {
+        savedGroups = savedGroups.filter(g => g.id !== groupId);
+        saveGroupsData();
+        renderUI();
+        showNotification("Template deleted.");
+      });
+    }
+
+    function printGroup(groupId) {
+      const group = savedGroups.find(g => g.id === groupId);
+      if (!group || group.items.length === 0) return;
+
+      const printContainer = document.getElementById('print-layout');
+      printContainer.innerHTML = '';
+
+      group.items.forEach(item => {
+        const count = parseInt(item.qty) || 1;
+        for(let i=0; i<count; i++) {
+          const printCard = document.createElement('div');
+          printCard.className = 'print-card';
+          printCard.innerHTML = `
+            <div class="print-part">${item.partNo}</div>
+            ${item.loc ? `<div class="print-loc">LOC: ${item.loc}</div>` : ''}
+            <div class="print-desc">${item.desc} ${count > 1 ? `(1 of ${count})` : ''}</div>
+            <div class="barcode-wrapper"><svg id="print-barcode-${item.partNo}-${i}"></svg></div>
+          `;
+          printContainer.appendChild(printCard);
+
+          setTimeout(() => {
+            try {
+              JsBarcode(`#print-barcode-${item.partNo}-${i}`, item.partNo, {
+                format: "CODE128", lineColor: "#000", width: 2.5, height: 50, displayValue: false, margin: 0
+              });
+            } catch(e) {}
+          }, 50);
+        }
+      });
+
+      setTimeout(() => {
+        try { window.print(); } catch(err) { console.error("Print blocked:", err); }
+      }, 200);
+    }
+
+    function saveData() { localStorage.setItem('savedBarcodeLabels', JSON.stringify(labels)); }
+    function saveGroupsData() { localStorage.setItem('savedBarcodeGroups', JSON.stringify(savedGroups)); }
+    function saveJobsData() { localStorage.setItem('savedJobCards', JSON.stringify(savedJobs)); }
+    function saveHistoryData() { localStorage.setItem('scanHistoryList', JSON.stringify(scanHistory)); }
+
+    function renderUI() {
+      const listContainer = document.getElementById('list');
+      const actionButtons = document.getElementById('action-buttons');
+      const banner = document.getElementById('editing-banner');
+      
+      document.getElementById('count-badge').innerText = labels.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
+
+      if (contextEditing) {
+        banner.style.display = 'flex';
+        const isJob = (contextEditing.type === 'job');
+        const bannerTitleStr = (isJob && contextEditing.description) ? `${contextEditing.name} - ${contextEditing.description}` : contextEditing.name;
+        document.getElementById('editing-banner-text').innerText = `WORKBENCH: Editing ${isJob ? 'Job' : 'Template'} "${bannerTitleStr}"`;
+      } else {
+        banner.style.display = 'none';
+      }
+      
+      if (labels.length > 0 || contextEditing) {
+        actionButtons.style.display = 'block';
+      } else {
+        actionButtons.style.display = 'none';
+      }
+
+      listContainer.innerHTML = '';
+
+      if(labels.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state" id="empty-state">No parts scanned yet.</div>';
+      } else {
+        labels.forEach((label) => {
+          const showOosFeature = (contextEditing && contextEditing.type === 'job') || !contextEditing;
+          const oosBadge = (showOosFeature && label.oos) ? '<span class="oos-badge">ON ORDER</span>' : '';
+          const locBadge = label.loc ? `<span class="loc-badge">📍 ${label.loc}</span>` : '';
+          const oosBtnClass = label.oos ? 'btn-action oos active' : 'btn-action oos';
+          const oosBtnText = label.oos ? 'Ordered' : 'On Order';
+          const oosButtonHtml = showOosFeature ? `<button class="${oosBtnClass}" onclick="toggleOOS('${label.id}')">${oosBtnText}</button>` : '';
+
+          const qtyVal = parseInt(label.qty) || 1;
+
+          listContainer.innerHTML += `
+            <div class="scanned-item">
+              <div class="item-part-line">${label.partNo}</div>
+              <div class="item-desc-line">${oosBadge}${locBadge} ${label.desc || 'No description'}</div>
+              <div class="item-footer-row">
+                <div class="qty-badge">
+                  <button class="qty-btn" onclick="adjustQty('${label.id}', -1)">-</button>
+                  <span>Qty: ${qtyVal}</span>
+                  <button class="qty-btn" onclick="adjustQty('${label.id}', 1)">+</button>
+                </div>
+                <div class="item-actions">
+                  ${oosButtonHtml}
+                  <button class="btn-action edit" onclick="editLabel('${label.id}')">Edit</button>
+                  <button class="btn-action remove" onclick="removeLabel('${label.id}')">Remove</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // Render Job Cards (Collapsible & Persistent State)
+      const jobsSection = document.getElementById('jobs-section');
+      const jobsList = document.getElementById('jobs-list');
+      const jobsListContainer = document.getElementById('jobs-list-container');
+      const jobsTitleText = document.getElementById('jobs-title-text');
+      document.getElementById('jobs-count-badge').innerText = savedJobs.length;
+
+      if(savedJobs.length > 0) {
+        jobsSection.style.display = 'block';
+        jobsListContainer.style.display = jobsExpanded ? 'block' : 'none';
+        jobsTitleText.innerText = `My Saved Job Cards ${jobsExpanded ? '▴' : '▾'}`;
+        
+        jobsList.innerHTML = '';
+        savedJobs.forEach(job => {
+          const totalJobQty = job.items.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
+          const jobNoStr = job.jobNo || job.name || 'JOB';
+          const fullJobTitle = job.description ? `${jobNoStr} - ${job.description}` : jobNoStr;
+          
+          jobsList.innerHTML += `
+            <div class="group-card job-card">
+              <div class="group-header">
+                <div>
+                  <span class="group-title">${fullJobTitle}</span> 
+                  <span class="group-count" style="margin-left: 5px;">${totalJobQty} items</span>
+                </div>
+                <div style="font-size:12px; color:#888;">${job.date}</div>
+              </div>
+              <div class="group-actions">
+                <button class="btn-view" onclick="viewJob('${job.id}')">View</button>
+                <button class="btn-edit-group" onclick="loadContextToWorkbench('job', '${job.id}')">Edit</button>
+                <button class="btn-delete-group" onclick="deleteJob('${job.id}')">Delete</button>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        jobsSection.style.display = 'none';
+      }
+
+      // Render Template Groups (Collapsible & Persistent State with Load to List)
+      const groupsSection = document.getElementById('groups-section');
+      const groupsList = document.getElementById('groups-list');
+      const groupsListContainer = document.getElementById('groups-list-container');
+      const groupsTitleText = document.getElementById('groups-title-text');
+      document.getElementById('groups-count-badge').innerText = savedGroups.length;
+
+      groupsSection.style.display = 'block';
+      groupsListContainer.style.display = groupsExpanded ? 'block' : 'none';
+      groupsTitleText.innerText = `My Template Groups ${groupsExpanded ? '▴' : '▾'}`;
+
+      if(savedGroups.length > 0) {
+        groupsList.innerHTML = '';
+        savedGroups.forEach(group => {
+          const totalGroupQty = group.items.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
+          groupsList.innerHTML += `
+            <div class="group-card">
+              <div class="group-header">
+                <div><span class="group-title">${group.name}</span> <span class="group-count">${totalGroupQty} items</span></div>
+              </div>
+              <div class="group-actions">
+                <button class="btn-load" onclick="loadTemplateToList('${group.id}')">Load to List</button>
+                <button class="btn-barcode-group" onclick="viewGroupBarcodes('${group.id}')">Barcodes</button>
+                <button class="btn-print-group" onclick="printGroup('${group.id}')">Print</button>
+                <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
+                <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        groupsList.innerHTML = '<div class="empty-state">No template groups saved yet. Click "+ Save Current List" above to create one.</div>';
+      }
+
+      // Scan History
+      const historySection = document.getElementById('history-section');
+      const historyList = document.getElementById('history-list');
+      if(scanHistory.length > 0) {
+        historySection.style.display = 'block';
+        historyList.innerHTML = '';
+        scanHistory.forEach(hist => {
+          const safeDesc = hist.desc ? hist.desc.replace(/'/g, "&apos;").replace(/"/g, "&quot;") : '';
+          const safeLoc = hist.loc ? hist.loc.replace(/'/g, "&apos;").replace(/"/g, "&quot;") : '';
+          historyList.innerHTML += `
+            <div class="scanned-item">
+              <div class="item-part-line">${hist.partNo}</div>
+              <div class="item-desc-line">${hist.loc ? '<span class="loc-badge">📍 ' + hist.loc + '</span>' : ''}${hist.desc || 'No description'}</div>
+              <div class="item-footer-row">
+                <span style="font-size: 11px; color: #888;">${hist.date}</span>
+                <div class="item-actions">
+                  <button class="btn-action edit" onclick="addFromHistory('${hist.partNo}', '${safeDesc}', '${safeLoc}')">Re-Add</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        historySection.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
+
