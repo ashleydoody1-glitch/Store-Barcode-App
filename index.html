@@ -267,7 +267,7 @@
 
     /* Saved Job Cards / Template Groups / Scan History swipe area */
     .saved-sections-swipe{overflow:hidden;margin-top:18px;border-radius:16px;touch-action:pan-y;}
-    .saved-sections-track{display:flex;width:300%;transition:transform .25s ease;will-change:transform;}
+    .saved-sections-track{display:flex;width:300%;transition:transform .25s ease,height .2s ease;will-change:transform,height;}
     .saved-section-slide{width:33.333333%;flex:0 0 33.333333%;box-sizing:border-box;padding:0 1px;}
     .saved-section-slide .groups-section{margin-top:0;}
     .saved-section-tabs{display:flex;gap:8px;margin:0 0 8px;}
@@ -748,6 +748,14 @@
     };
 
     let savedSectionIndex = 0;
+    function updateSavedSectionHeight(){
+      const track = document.getElementById('saved-sections-track');
+      if(!track) return;
+      const slides = track.querySelectorAll('.saved-section-slide');
+      const activeSlide = slides[savedSectionIndex];
+      if(activeSlide) track.style.height = `${activeSlide.scrollHeight}px`;
+    }
+
     function showSavedSection(index){
       savedSectionIndex = Math.max(0, Math.min(2, Number(index) || 0));
       const track = document.getElementById('saved-sections-track');
@@ -755,11 +763,30 @@
       document.getElementById('saved-tab-jobs')?.classList.toggle('active', savedSectionIndex===0);
       document.getElementById('saved-tab-groups')?.classList.toggle('active', savedSectionIndex===1);
       document.getElementById('saved-tab-history')?.classList.toggle('active', savedSectionIndex===2);
+      requestAnimationFrame(updateSavedSectionHeight);
     }
     (function setupSavedSectionSwipe(){
       let startX = null;
-      document.addEventListener('touchstart', e=>{ const area=document.getElementById('saved-sections-swipe'); if(area && e.target.closest('#saved-sections-swipe')) startX=e.touches[0].clientX; }, {passive:true});
-      document.addEventListener('touchend', e=>{ if(startX===null)return; const dx=e.changedTouches[0].clientX-startX; startX=null; if(Math.abs(dx)>45) showSavedSection(savedSectionIndex + (dx<0 ? 1 : -1)); }, {passive:true});
+      let startY = null;
+      document.addEventListener('touchstart', e=>{
+        const area=document.getElementById('saved-sections-swipe');
+        if(area && e.target.closest('#saved-sections-swipe')){
+          startX=e.touches[0].clientX;
+          startY=e.touches[0].clientY;
+        }
+      }, {passive:true});
+      document.addEventListener('touchend', e=>{
+        if(startX===null || startY===null)return;
+        const dx=e.changedTouches[0].clientX-startX;
+        const dy=e.changedTouches[0].clientY-startY;
+        startX=null;
+        startY=null;
+        const horizontalDistance=Math.abs(dx);
+        const verticalDistance=Math.abs(dy);
+        if(horizontalDistance>=90 && horizontalDistance>verticalDistance*1.35){
+          showSavedSection(savedSectionIndex + (dx<0 ? 1 : -1));
+        }
+      }, {passive:true});
     })();
 
     // --- DATABASE SEARCH MODAL CONTROLS ---
@@ -1041,6 +1068,7 @@
         labels = [];
         saveData();
         renderUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         showNotification("Active list cleared.");
       });
     }
@@ -1646,6 +1674,7 @@
       }
       const savedGroupFilter = document.getElementById('group-filter');
       if (savedGroupFilter) filterSavedGroups(savedGroupFilter.value);
+      requestAnimationFrame(updateSavedSectionHeight);
     }
 
     // Saved-set utilities focused on parts collation, not stock management.
