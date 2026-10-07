@@ -231,7 +231,8 @@
          prompt modals (such as “Save Job Card”) that otherwise bleed onto page 1. */
       body > *:not(#print-layout) { display: none !important; }
       html, body { margin: 0 !important; padding: 0 !important; width: 100%; background: #fff !important; color: #000 !important; }
-      #print-layout { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5mm; width: 100%; margin: 0; padding: 0; }
+      body > #print-layout { display: grid !important; position: static !important; visibility: visible !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5mm; width: 100%; margin: 0; padding: 0; }
+      #print-layout * { visibility: visible !important; }
       .print-card { border: 1px solid #000; border-radius: 3px; padding: 5mm 3mm; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 45mm; min-width: 0; box-sizing: border-box; page-break-inside: avoid; break-inside: avoid; overflow: hidden; background: #fff !important; }
       .print-part { font-size: 16pt; font-weight: bold; margin-bottom: 2mm; font-family: monospace; line-height: 1.1; }
       .print-loc { font-size: 9pt; font-weight: bold; margin-bottom: 1.5mm; border: 1px solid #000; padding: 1px 4px; border-radius: 2px; display: inline-block; }
@@ -404,7 +405,7 @@
           <li>Generated barcodes are a convenient substitute for manually typing the part number; they do not automatically transfer the list to the computer.</li>
           <li>Your saved sets and history are stored in this browser on this phone. Use <strong>Backup data</strong> periodically, especially before changing phones or clearing browser data.</li>
           <li>Open <strong>Settings</strong> to control automatic scan-to-list, sound, vibration and the barcode screen wake-lock behaviour.</li>
-          <li>For printed labels, use <strong>Print Barcode Labels</strong> on a saved template when a physical set is useful. For normal jobs, scan the barcodes displayed on the phone.</li>
+          <li>For printed labels, use <strong>Print Current List</strong> from Tools when a physical set is useful. For normal jobs, scan the barcodes displayed on the phone.</li>
         </ul>
       </div>
 
@@ -468,11 +469,12 @@
       <button class="quick-action" onclick="openSearchModal()"><span class="svg-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 5 5"></path></svg></span>Find a part</button>
     </div>
     <details class="mobile-tools">
-      <summary>Backup and other tools</summary>
+      <summary>Tools</summary>
       <div class="quick-grid">
         <button class="quick-action" onclick="openGuideModal()">How it works</button>
         <button class="quick-action quick-success" onclick="exportAllData()">Backup data</button>
         <button class="quick-action quick-warning" onclick="document.getElementById('backup-file-input').click()">Import backup</button>
+        <button class="quick-action" onclick="printCurrentList()">Print Current List</button>
         <button class="quick-action" onclick="exportActiveListCSV()">Export active list CSV</button>
         <button class="quick-action" onclick="openSettingsModal()">Settings</button>
         <button class="quick-action" onclick="openLastUsedGroup()">Last Used Set</button>
@@ -605,8 +607,9 @@
         </div>
       </div>
     </div>
+  </div>
 
-  <!-- PRINT UI -->
+  <!-- PRINT UI: kept outside the mobile app container so print CSS can expose it reliably. -->
   <div id="print-layout"></div>
 
   <script>
@@ -1488,13 +1491,17 @@
       });
     }
 
-    async function printGroup(groupId) {
-      const group = savedGroups.find(g => g.id === groupId);
-      if (!group || !Array.isArray(group.items) || group.items.length === 0) return;
+    async function printCurrentList() {
+      if (!Array.isArray(labels) || labels.length === 0) {
+        showNotification("The active list is empty.");
+        return;
+      }
+
       const printContainer = document.getElementById('print-layout');
       printContainer.className = '';
       printContainer.replaceChildren();
-      for (const item of group.items) {
+
+      for (const item of labels) {
         const count = validQty(item.qty);
         for (let i = 0; i < count; i++) {
           const printCard = document.createElement('div');
@@ -1509,9 +1516,13 @@
           catch (error) { console.error('Could not render print barcode:', error); }
         }
       }
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+
+      // Give the browser time to paint the generated text and SVG barcodes before
+      // Android/Chrome captures the page for the print preview.
+      printContainer.offsetHeight;
+      setTimeout(() => {
         try { window.print(); } catch (error) { console.error('Print blocked:', error); showNotification('Unable to open print dialog.'); }
-      }));
+      }, 350);
     }
 
     function openLastUsedGroup(){ const group=savedGroups.find(g=>g.id===lastUsedGroupId); if(!group){ showNotification('No recently used set yet.'); return; } loadTemplateToList(group.id); }
@@ -1652,8 +1663,7 @@
                 <button class="btn-more-group" type="button" onclick="toggleGroupActions('${group.id}')" aria-expanded="false" aria-controls="group-actions-${group.id}">More ▾</button>
                 <div class="group-actions-secondary" id="group-actions-${group.id}" style="display:none;">
                   <button class="btn-barcode-group" onclick="viewGroupBarcodes('${group.id}')">Screen Barcodes</button>
-                  <button class="btn-print-group" onclick="printGroup('${group.id}')">Print Barcode Labels</button>
-                  <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
+                    <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
                   <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
                 </div>
               </div>
