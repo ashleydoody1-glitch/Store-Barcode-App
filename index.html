@@ -135,7 +135,7 @@
       .group-title { font-weight: bold; font-size: 16px; color: var(--text); }
       .group-count { font-size: 12px; color: #666; background: #eee; padding: 2px 6px; border-radius: 10px; }
       
-      .group-actions { display: flex; gap: 6px; }
+      .group-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .btn-load { background: var(--primary); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
       .btn-barcode-group { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
       .btn-view { background: var(--info); color: white; border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; cursor: pointer; flex-grow: 1; font-size: 12px;}
@@ -272,10 +272,22 @@
     .saved-section-slide .groups-section{margin-top:0;}
     .saved-section-tabs{display:flex;gap:8px;margin:0 0 8px;}
     .saved-section-tab{flex:1;border:1px solid #cbd8e5;background:#fff;color:#526477;border-radius:9px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;}
-    .saved-section-tab.active{background:#0b5cab;color:#fff;border-color:#0b5cab;}.setting-row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #e5ebf1;cursor:pointer}.setting-row:last-of-type{border-bottom:0}.setting-row input{margin-top:3px;width:20px;height:20px}.setting-row span{display:flex;flex-direction:column;gap:3px}.setting-row small{color:#667788;font-size:12px;line-height:1.35}.simple-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10002;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}.active-list-stats{font-size:12px;color:#647588;margin:-14px 0 10px}.scan-success-flash{animation:scanFlash .45s ease}@keyframes scanFlash{0%{transform:scale(1)}50%{transform:scale(1.015)}100%{transform:scale(1)}}
+    .saved-section-tab.active{background:#0b5cab;color:#fff;border-color:#0b5cab;}
+    .group-actions-secondary{display:grid;grid-template-columns:1fr 1fr;gap:8px;grid-column:1 / -1;margin-top:0;}
+    .group-actions-secondary button{min-height:42px;}
+    .group-actions-secondary button:nth-child(1),.group-actions-secondary button:nth-child(2){grid-column:1 / -1;}
+    .btn-more-group{min-height:42px;border:1px solid #cbd8e5;background:#f4f7fa;color:#526477;border-radius:8px;font-weight:700;cursor:pointer;}
+    .btn-more-group:active{transform:translateY(1px);}
+.setting-row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid #e5ebf1;cursor:pointer}.setting-row:last-of-type{border-bottom:0}.setting-row input{margin-top:3px;width:20px;height:20px}.setting-row span{display:flex;flex-direction:column;gap:3px}.setting-row small{color:#667788;font-size:12px;line-height:1.35}.simple-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10002;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}.active-list-stats{font-size:12px;color:#647588;margin:-14px 0 10px}.scan-success-flash{animation:scanFlash .45s ease}@keyframes scanFlash{0%{transform:scale(1)}50%{transform:scale(1.015)}100%{transform:scale(1)}}
     .workflow-label{margin:18px 0 8px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#526477}
 
 
+.job-actions-collapsed{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.job-actions-collapsed > button{min-height:42px;}
+.job-actions-collapsed .job-extra-actions{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.job-actions-collapsed .job-extra-actions button{min-height:42px;}
+.btn-job-more{background:#f4f7fa;color:#526477;border:1px solid #cbd8e5;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer;}
+.btn-job-more:active{transform:translateY(1px);}
 </style>
 </head>
 <body>
@@ -1596,10 +1608,13 @@
                 </div>
                 <div style="font-size:12px; color:#888;">${escapeHTML(job.date)}</div>
               </div>
-              <div class="group-actions">
+              <div class="group-actions job-actions-collapsed">
                 <button class="btn-view" onclick="viewJob('${job.id}')">View</button>
-                <button class="btn-edit-group" onclick="loadContextToWorkbench('job', '${job.id}')">Edit</button>
-                <button class="btn-delete-group" onclick="deleteJob('${job.id}')">Delete</button>
+                <button class="btn-job-more" type="button" onclick="toggleJobActions(this)">More ▾</button>
+                <div class="job-extra-actions" style="display:none;">
+                  <button class="btn-edit-group" onclick="loadContextToWorkbench('job', '${job.id}')">Edit</button>
+                  <button class="btn-delete-group" onclick="deleteJob('${job.id}')">Delete</button>
+                </div>
               </div>
             </div>
           `;
@@ -1634,10 +1649,13 @@
               </div>
               <div class="group-actions">
                 <button class="btn-load" onclick="loadTemplateToList('${group.id}')">Load to List</button>
-                <button class="btn-barcode-group" onclick="viewGroupBarcodes('${group.id}')">Screen Barcodes</button>
-                <button class="btn-print-group" onclick="printGroup('${group.id}')">Print Barcode Labels</button>
-                <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
-                <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
+                <button class="btn-more-group" type="button" onclick="toggleGroupActions('${group.id}')" aria-expanded="false" aria-controls="group-actions-${group.id}">More ▾</button>
+                <div class="group-actions-secondary" id="group-actions-${group.id}" style="display:none;">
+                  <button class="btn-barcode-group" onclick="viewGroupBarcodes('${group.id}')">Screen Barcodes</button>
+                  <button class="btn-print-group" onclick="printGroup('${group.id}')">Print Barcode Labels</button>
+                  <button class="btn-edit-group" onclick="loadContextToWorkbench('group', '${group.id}')">Edit</button>
+                  <button class="btn-delete-group" onclick="deleteGroup('${group.id}')">Delete</button>
+                </div>
               </div>
             </div>
           `;
@@ -1677,6 +1695,16 @@
       requestAnimationFrame(updateSavedSectionHeight);
     }
 
+    function toggleJobActions(button) {
+      const card = button.closest('.job-card');
+      if (!card) return;
+      const extra = card.querySelector('.job-extra-actions');
+      if (!extra) return;
+      const isOpen = extra.style.display !== 'none';
+      extra.style.display = isOpen ? 'none' : 'flex';
+      button.textContent = isOpen ? 'More ▾' : 'Less ▴';
+    }
+
     // Saved-set utilities focused on parts collation, not stock management.
     function filterSavedGroups(value) {
       const query = String(value || '').trim().toLowerCase();
@@ -1686,6 +1714,16 @@
         card.style.display = !query || text.includes(query) ? '' : 'none';
       });
 
+    }
+
+    function toggleGroupActions(groupId){
+      const panel = document.getElementById(`group-actions-${groupId}`);
+      const button = document.querySelector(`[aria-controls="group-actions-${groupId}"]`);
+      if(!panel || !button) return;
+      const isOpen = panel.style.display !== 'none';
+      panel.style.display = isOpen ? 'none' : 'grid';
+      button.setAttribute('aria-expanded', String(!isOpen));
+      button.textContent = isOpen ? 'More ▾' : 'Less ▴';
     }
 
     function toggleGroupFavorite(groupId){ const group=savedGroups.find(g=>g.id===groupId); if(!group)return; group.favorite=!group.favorite; saveGroupsData(); renderUI(); showNotification(group.favorite?'Added to favourites.':'Removed from favourites.'); }
