@@ -82,7 +82,16 @@
       .btn-cancel { background-color: var(--secondary); display: none; }
       .btn-update { background-color: var(--warning); color: #000; }
       .btn-group-init { background-color: var(--success); margin-top: 12px; }
+      .btn-save-template { background-color: #d97706 !important; color: #fff; margin-top: 12px; }
+      .btn-save-template:active { background-color: #b45309 !important; }
       .btn-job-save { background-color: var(--info); margin-top: 12px; }
+      .btn-add-to-job { background-color: #7c4d9e; color: #fff; margin-top: 12px; }
+      .btn-add-to-job:active { background-color: #643b81; }
+      #add-to-job-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:10003; justify-content:center; align-items:center; padding:16px; box-sizing:border-box; }
+      .add-to-job-content { background:#fff; width:100%; max-width:520px; max-height:85vh; overflow-y:auto; border-radius:18px; padding:18px; box-sizing:border-box; display:flex; flex-direction:column; }
+      .add-to-job-option { display:flex; flex-direction:column; align-items:flex-start; text-align:left; width:100%; padding:13px; border:1px solid #dce6ef; border-radius:10px; background:#f8fbff; color:#203448; gap:4px; }
+      .add-to-job-option:active { background:#e9f3ff; }
+      .add-to-job-option small { color:#647588; font-size:12px; }
 
       .btn-clear { background-color: transparent; color: var(--danger); border: 2px solid var(--danger); margin-top: 12px; margin-bottom: 40px; }
       
@@ -343,6 +352,18 @@
     </div>
   </div>
 
+  <!-- ADD ACTIVE LIST TO AN EXISTING JOB CARD -->
+  <div id="add-to-job-modal">
+    <div class="add-to-job-content">
+      <div class="job-modal-header">
+        <h2 class="job-modal-title" style="color:#7c4d9e;">Add Active List To Job Card</h2>
+        <button class="btn-close-modal" onclick="closeAddToJobModal()" style="width:auto;margin:0;padding:9px 12px;">Close</button>
+      </div>
+      <p style="font-size:13px;color:#647588;margin:0 0 12px;">Choose the job you're working on. Every part in your Active Scan List will be added to that saved Job Card. Existing parts will have their quantities combined.</p>
+      <div id="add-to-job-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
   <!-- IN-APP JOB CARD PROMPT MODAL -->
   <div id="job-prompt-modal">
     <div class="prompt-card">
@@ -388,7 +409,9 @@
         <ul>
           <li>Review the <strong>Active Scan List</strong> and correct any part number, quantity or description before using the barcodes.</li>
           <li>When the list is ready, tap <strong>Generate Barcodes</strong>. This opens the booking-out view on your phone.</li>
-          <li>Tap <strong>Save This Part Set</strong> for a reusable template, or <strong>Save As Job Card</strong> to save it under a job/bus number. Saved sets can be loaded again later.</li>
+          <li>Tap <strong>Save As Job Card</strong> to create a new job card for the current list, using the job/bus number when prompted.</li>
+          <li>While working on an existing job, tap <strong>Add To Job Card…</strong> to open the saved Job Card chooser. Select the job and the entire Active Scan List will be added to it. Parts already on that job have their quantities combined; your Active Scan List stays in place so you can keep working.</li>
+          <li>Tap <strong>Save This Part Set</strong> to create a reusable template. Template Groups can be loaded and edited separately.</li>
           <li>Use <strong>Find a part</strong> or the saved-set filter to find previously used parts and templates. Favourite frequently used sets, or use <strong>Last Used Set</strong> for the most recent one.</li>
         </ul>
 
@@ -547,8 +570,9 @@
     <!-- Main Actions -->
     <div id="action-buttons" style="display: none;">
       <button class="btn btn-group-init mobile-show-barcode" onclick="showActiveListBarcodes()">Generate Barcodes</button>
-      <button class="btn btn-job-save" onclick="saveActiveListAsTemplate()">Save This Part Set</button>
       <button class="btn btn-job-save" onclick="openJobPromptModal('save')">Save As Job Card</button>
+      <button class="btn btn-add-to-job" onclick="openAddToJobModal()">Add To Job Card…</button>
+      <button class="btn btn-save-template" onclick="saveActiveListAsTemplate()">Save This Part Set</button>
       <button class="btn btn-clear" onclick="clearAllLabels()">Clear Active List</button>
     </div>
 
@@ -1192,6 +1216,85 @@
       } else {
         proceedAction();
       }
+    }
+
+    function openAddToJobModal() {
+      if (!Array.isArray(labels) || labels.length === 0) {
+        showNotification('Your Active Scan List is empty. Add some parts first.');
+        return;
+      }
+      const modal = document.getElementById('add-to-job-modal');
+      const list = document.getElementById('add-to-job-list');
+      if (!modal || !list) return;
+      list.replaceChildren();
+      if (!Array.isArray(savedJobs) || savedJobs.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No saved Job Cards yet. Use Save As Job Card first.';
+        list.appendChild(empty);
+      } else {
+        savedJobs.forEach(job => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'add-to-job-option';
+          const title = document.createElement('strong');
+          title.textContent = job.jobNo || job.name || 'Job Card';
+          button.appendChild(title);
+          if (job.description) {
+            const description = document.createElement('small');
+            description.textContent = job.description;
+            button.appendChild(description);
+          }
+          const count = document.createElement('small');
+          count.textContent = `${(job.items || []).length} different parts · ${validQty((job.items || []).reduce((sum, item) => sum + validQty(item.qty), 0))} total quantity`;
+          button.appendChild(count);
+          button.addEventListener('click', () => addActiveListToJob(job.id));
+          list.appendChild(button);
+        });
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeAddToJobModal() {
+      const modal = document.getElementById('add-to-job-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function addActiveListToJob(jobId) {
+      if (!Array.isArray(labels) || labels.length === 0) {
+        closeAddToJobModal();
+        showNotification('Your Active Scan List is empty.');
+        return;
+      }
+      const job = savedJobs.find(item => item.id === jobId);
+      if (!job) {
+        closeAddToJobModal();
+        showNotification('That Job Card could not be found.');
+        return;
+      }
+      if (!Array.isArray(job.items)) job.items = [];
+      let addedParts = 0;
+      let mergedParts = 0;
+      for (const label of labels) {
+        const partNo = String(label.partNo || '').trim().toUpperCase();
+        if (!partNo) continue;
+        const qty = validQty(label.qty);
+        const existing = job.items.find(item => String(item.partNo || '').toUpperCase() === partNo);
+        if (existing) {
+          existing.qty = Math.min(999, validQty(existing.qty) + qty);
+          if (label.loc) existing.loc = label.loc;
+          if (label.desc) existing.desc = label.desc;
+          if (label.oos === true) existing.oos = true;
+          mergedParts++;
+        } else {
+          job.items.push({ partNo, loc: label.loc || '', desc: label.desc || '', qty, oos: label.oos === true });
+          addedParts++;
+        }
+      }
+      if (!saveJobsData()) return;
+      closeAddToJobModal();
+      renderUI();
+      showNotification(`Active list added to Job Card ${job.jobNo || job.name}. ${addedParts} new, ${mergedParts} updated.`);
     }
 
     function openJobPromptModal(mode) {
